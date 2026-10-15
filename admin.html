@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Administração — My Bae</title>
+    <link rel="icon" href="/assets/icons/heart.svg" />
+    <link rel="stylesheet" href="/css/variables.css" />
+    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <script type="module" src="/js/admin.js"></script>
+  </head>
+  <body>
+    <header class="admin-header">
+      <a href="/" class="admin-brand">my bae ♡</a
+      ><a href="/">Voltar para nosso universo ↗</a
+      ><button id="logout" class="button outline" hidden>Sair</button>
+    </header>
+    <main class="admin-main">
+      <p class="eyebrow">NOSSO CANTINHO DE CUIDADO</p>
+      <h1>Guardar. Planejar. <em>Viver.</em></h1>
+      <p id="admin-status" role="status"></p>
+      <form id="login-form" class="admin-login">
+        <h2>Administração</h2>
+        <p>Entre para cuidar das nossas memórias.</p>
+        <label
+          >Senha administrativa<input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            maxlength="256"
+            required /></label
+        ><button class="button primary" type="submit">Entrar ↗</button>
+      </form>
+      <section id="admin-panel" hidden>
+        <div class="admin-controls">
+          <label
+            >O que vamos cuidar?<select id="collection">
+              <option value="memorias">Memórias</option>
+              <option value="fotos">Fotografias</option>
+              <option value="encontros">Encontros</option>
+              <option value="roteiros">Roteiros</option>
+              <option value="configuracoes">Configurações do site</option>
+            </select></label
+          ><button id="new-record" class="button primary">
+            + Novo registro
+          </button>
+        </div>
+        <div id="upload-panel" class="upload-panel" hidden>
+          <h3>Uma nova fotografia</h3>
+          <p>
+            JPG, PNG ou WebP, até 2,8 MB. O envio cria um rascunho; revise e
+            publique depois.
+          </p>
+          <label
+            >Escolher imagem<input
+              id="photo-file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp" /></label
+          ><img
+            id="upload-preview"
+            alt="Pré-visualização da fotografia"
+            hidden
+          /><button id="upload-photo" class="button primary" disabled>
+            Enviar fotografia
+          </button>
+        </div>
+        <div id="admin-list"></div>
+        <dialog id="edit-dialog">
+          <form id="edit-form">
+            <div class="edit-heading">
+              <h2 id="editor-title">Editar</h2>
+              <button
+                type="button"
+                id="close-editor"
+                class="icon-button"
+                aria-label="Fechar edição"
+              >
+                ×
+              </button>
+            </div>
+            <div id="editor-fields"></div>
+            <p id="editor-status" role="status"></p>
+            <div class="editor-actions">
+              <button class="button primary" type="submit">
+                Salvar alterações</button
+              ><button id="delete-record" class="button outline" type="button">
+                Excluir registro
+              </button>
+            </div>
+          </form>
+        </dialog>
+      </section>
+    </main>
+  </body>
+</html>

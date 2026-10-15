@@ -1,0 +1,406 @@
+@media (min-width: 1600px) {
+  .hero {
+    padding-left: max(8%, calc((100vw - 1200px) / 2));
+    padding-right: max(8%, calc((100vw - 1200px) / 2));
+    gap: 65px;
+  }
+  .hero-art {
+    width: 510px;
+  }
+  .hero {
+    min-height: 800px;
+  }
+}
+@media (max-width: 1050px) {
+  .site-header nav {
+    gap: 18px;
+    font-size: 10px;
+  }
+  .hero {
+    padding-left: 6%;
+    padding-right: 6%;
+    min-height: 680px;
+  }
+  .hero h1 {
+    font-size: 55px;
+  }
+  .hero-art {
+    min-height: 440px;
+  }
+  .polaroid img {
+    height: 270px;
+  }
+  .polaroid-back img {
+    height: 230px;
+  }
+  .drawn-heart {
+    bottom: 25px;
+  }
+  .art-caption {
+    bottom: 10px;
+    font-size: 6px;
+  }
+  .planner {
+    gap: 40px;
+  }
+  .planner-form {
+    padding: 24px;
+  }
+  .itinerary-paper {
+    padding: 30px;
+  }
+  .itinerary-step {
+    grid-template-columns: 100px 1fr;
+  }
+  .calendar-layout {
+    gap: 35px;
+  }
+  .hero-bottom > span:last-child {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .site-header {
+    height: 85px;
+    padding: 0 6%;
+    position: relative;
+    z-index: 20;
+  }
+  .brand {
+    font-size: 30px;
+  }
+  .brand small {
+    font-size: 7px;
+  }
+  .menu-toggle {
+    display: block;
+    color: #e8dce9;
+  }
+  .site-header nav {
+    display: none;
+    position: absolute;
+    top: 85px;
+    left: 0;
+    right: 0;
+    background: #25212a;
+    padding: 25px 6%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    box-shadow: 0 15px 20px #17151c33;
+  }
+  .site-header nav.open {
+    display: flex;
+  }
+  .site-header nav a {
+    padding: 14px;
+    font-size: 13px;
+  }
+  .nav-cta {
+    margin-top: 8px;
+  }
+  .hero {
+    display: block;
+    padding: 48px 7% 80px;
+    min-height: 0;
+  }
+  .hero h1 {
+    font-size: clamp(44px, 8.5vw, 64px);
+  }
+  .hero .eyebrow {
+    font-size: 9px;
+    margin-bottom: 20px;
+  }
+  .hero-message {
+    margin-top: 22px;
+  }
+  .hero-art {
+    max-width: 440px;
+    margin: 65px auto 0;
+    min-height: 440px;
+  }
+  .polaroid-front {
+    top: 68px;
+    right: 2%;
+  }
+  .polaroid-back {
+    left: 3%;
+    top: 10px;
+  }
+  .polaroid-front img {
+    height: 260px;
+  }
+  .polaroid-back img {
+    height: 230px;
+  }
+  .note-top {
+    top: -18px;
+    right: 4%;
+    font-size: 17px;
+  }
+  .drawn-heart {
+    font-size: 90px;
+    bottom: 30px;
+  }
+  .art-caption {
+    bottom: 0;
+    right: 0;
+    font-size: 6px;
+  }
+  .hero-bottom {
+    bottom: 22px;
+    font-size: 7px;
+    left: 7%;
+    right: 7%;
+  }
+  .hero-bottom a {
+    font-size: 9px;
+  }
+  .ribbon {
+    overflow: hidden;
+    justify-content: flex-start;
+    gap: 22px;
+    padding: 14px 6%;
+  }
+  .ribbon span {
+    font-size: 16px;
+  }
+  .ribbon b {
+    font-size: 17px;
+  }
+  .section {
+    padding: 60px 6%;
+  }
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 30px;
+  }
+  .section-heading .eyebrow {
+    font-size: 9px;
+    margin-bottom: 15px;
+  }
+  .section-heading > p {
+    font-size: 12px;
+  }
+  .section-heading h2 {
+    font-size: 36px;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .photo-card img {
+    height: 210px;
+  }
+  .photo-card span {
+    font-size: 16px;
+  }
+  .calendar-layout {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+  .calendar {
+    padding: 22px;
+  }
+  .calendar-days button {
+    aspect-ratio: 1.3;
+  }
+  .planner {
+    display: block;
+  }
+  .planner .eyebrow {
+    margin-bottom: 28px;
+  }
+  .planner h2 {
+    font-size: 46px;
+  }
+  .planner-star {
+    top: 40px;
+    right: 15px;
+    font-size: 50px;
+  }
+  .planner-intro {
+    margin-bottom: 35px;
+  }
+  .planner-note {
+    margin-top: 25px;
+  }
+  .planner-form {
+    padding: 24px 20px;
+  }
+  .planner-intro > p:not(.eyebrow) {
+    font-size: 17px;
+  }
+  .planner .muted-light {
+    max-width: 100%;
+  }
+  .planner h2 br:nth-child(2) {
+    display: none;
+  }
+  .itinerary-steps {
+    grid-template-columns: 1fr;
+  }
+  .itinerary-paper {
+    padding: 28px 18px;
+  }
+  .itinerary-title h3 {
+    font-size: 35px;
+  }
+  .poster-mode .itinerary-title h3 {
+    font-size: 39px;
+  }
+  .itinerary-step {
+    grid-template-columns: 120px 1fr;
+    min-height: 180px;
+  }
+  .step-content h4 {
+    font-size: 21px;
+  }
+  .step-content p {
+    font-size: 12px;
+  }
+  .step-content {
+    padding: 17px;
+  }
+  .step-image {
+    min-height: 180px;
+  }
+  .itinerary-extras {
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+  .itinerary-toolbar {
+    gap: 10px;
+  }
+  .segmented button {
+    padding: 8px 13px;
+    font-size: 10px;
+  }
+  .export-actions {
+    gap: 5px;
+  }
+  .export-actions .button {
+    padding: 9px 11px;
+    font-size: 10px;
+  }
+  .closing {
+    padding: 55px 20px;
+  }
+  .closing h2 {
+    font-size: 34px;
+  }
+  footer {
+    flex-wrap: wrap;
+    padding: 30px 6%;
+  }
+  footer p {
+    order: 3;
+    width: 100%;
+  }
+  .empty-state {
+    padding: 35px 18px;
+  }
+  .sort-label {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .lightbox .icon-button {
+    min-width: 32px;
+  }
+  .lightbox figure {
+    max-width: 78%;
+  }
+  .memory {
+    padding-left: 22px;
+    gap: 15px;
+  }
+  .memory img {
+    width: 80px;
+    height: 110px;
+  }
+  .memory h3 {
+    font-size: 23px;
+  }
+  .memory p {
+    font-size: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .hero-art {
+    min-height: 390px;
+  }
+  .polaroid-front img {
+    height: 220px;
+  }
+  .polaroid-back img {
+    height: 200px;
+  }
+  .hand-note {
+    font-size: 15px;
+  }
+  .hero h1 {
+    font-size: 43px;
+  }
+  .hero-bottom > span:first-child {
+    font-size: 6px;
+  }
+  .form-grid {
+    gap: 14px 10px;
+  }
+  .planner-form {
+    padding: 20px 15px;
+  }
+  .itinerary-step {
+    grid-template-columns: 90px 1fr;
+  }
+  .step-content {
+    padding: 14px;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media print {
+  body > * {
+    display: none !important;
+  }
+  body main {
+    display: block !important;
+  }
+  main > * {
+    display: none !important;
+  }
+  main #roteiros {
+    display: block !important;
+    padding: 0;
+  }
+  #roteiros > * {
+    display: none !important;
+  }
+  #roteiros #itinerary-output {
+    display: block !important;
+  }
+  .location-controls,
+  .map-section {
+    display: none !important;
+  }
+  .itinerary-paper {
+    border: 0;
+  }
+  .itinerary-step {
+    break-inside: avoid;
+  }
+}

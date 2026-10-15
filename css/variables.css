@@ -1,0 +1,16 @@
+:root {
+  --color-black: #17151c;
+  --color-black-soft: #25212a;
+  --color-lilac: #a890c5;
+  --color-lilac-light: #d8c8e8;
+  --color-gray: #77717c;
+  --color-gray-light: #b8afbc;
+  --color-nude: #ead8cd;
+  --color-nude-light: #f7f0ec;
+  --color-pink: #d78da8;
+  --color-pink-light: #f2cedb;
+  --font-body: "DM Sans", sans-serif;
+  --font-title: "Playfair Display", Georgia, serif;
+  --radius: 16px;
+  --border: 1px solid #dcd2cd;
+}
