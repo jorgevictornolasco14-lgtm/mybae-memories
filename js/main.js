@@ -1,4 +1,4 @@
-import { initMemories } from "./features/memories.js";
+import { initMemories, initMemoryCreate } from "./features/memories.js";
 import { initNavbar } from "./components/navbar.js";
 import { $, todayKey } from "./components/ui.js";
 import { initGallery } from "./features/gallery.js";
@@ -13,9 +13,11 @@ const itineraries = initItinerary();
 initAnimations();
 const galleryReady = initGallery();
 initGalleryUpload(async () => (await galleryReady)());
+const refreshMemories = initMemories();
+initMemoryCreate(refreshMemories);
 await Promise.allSettled([
   galleryReady,
   initCalendar((id) => itineraries.showForEvent(id)),
-  initMemories(),
+  refreshMemories(),
   initSettings(),
 ]);

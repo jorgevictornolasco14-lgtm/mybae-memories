@@ -14,6 +14,10 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 | POST | /api/ai | Objeto de roteiro |
 | POST | /api/mapas | Array: nome (endereço exibido), latitude e longitude numéricas e válidas |
 
+## Cadastro de memórias
+
+Verificação em 16/10/2026: `GET /api/memorias` respondeu HTTP 200 com `[]`. O preflight para `POST /api/memorias` respondeu HTTP 405 e `Allow: GET`; portanto, o backend observado ainda não oferece gravação de memórias e não há contrato POST real que o frontend possa confirmar. A interface usa provisoriamente os campos públicos do GET (`titulo`, `data_memoria`, `descricao`) e exige HTTP 201 para mostrar sucesso. Com o endpoint atual, a interface informa que nada foi salvo; habilitar o POST e validar esse payload exige alteração no repositório do backend, que não foi feita aqui.
+
 ## CORS e upload da galeria
 
 Verificação HTTP em 15/10/2026 (America/Sao_Paulo): `GET /api/galeria` retornou HTTP 200 com dois registros publicados, inclusive com `Origin: https://mybae-memories.vercel.app`. A resposta é um array JSON direto. Cada registro observado inclui `imagem_url` e `url` como URLs assinadas do Supabase Storage; os tokens observados expiram em aproximadamente cinco minutos. O preflight OPTIONS para POST nessa origem retornou 204 e autorizou `GET`, `POST` e o header `Content-Type`. A origem de produção está autorizada no momento da verificação.

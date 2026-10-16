@@ -52,7 +52,13 @@ class FrontendTests(unittest.TestCase):
     def mock_api(self, route):
         name = route.request.url.rsplit('/', 1)[-1]
         self.requests.append((name, route.request))
-        value = self.responses.get(name, [])
+        if name == 'memorias' and route.request.method == 'POST':
+            body = route.request.post_data_json
+            value = self.responses.get('memorias_create', (201, body))
+            if isinstance(value, tuple) and value[0] == 201:
+                self.responses['memorias'] = [body]
+        else:
+            value = self.responses.get(name, [])
         if isinstance(value, tuple):
             route.fulfill(status=value[0], content_type='application/json', body=json.dumps(value[1]))
         else:
@@ -205,8 +211,8 @@ class FrontendTests(unittest.TestCase):
         self.responses['memorias'] = [{'titulo': '<b>Memória</b>', 'data_memoria': '2026-10-01'}]
         self.open()
         expect(self.page.locator('.photo-card')).to_have_count(3)
-        expect(self.page.locator('.memory')).to_contain_text('<b>Memória</b>')
-        self.assertEqual(self.page.locator('.memory b').count(), 0)
+        expect(self.page.locator('.memory-card')).to_contain_text('<b>Memória</b>')
+        self.assertEqual(self.page.locator('.memory-card b').count(), 0)
         self.page.locator('#gallery-sort').select_option('caption')
         self.page.locator('.photo-card').first.click()
         expect(self.page.locator('#lightbox')).to_be_visible()
@@ -271,6 +277,50 @@ class FrontendTests(unittest.TestCase):
         self.page.locator('.photo-card img').evaluate("img => img.dispatchEvent(new Event('error'))")
         expect(self.page.locator('.photo-card img')).to_have_attribute('src', renewed_url)
         self.assertEqual(sum(1 for name, request in self.requests if name == 'galeria' and request.method == 'GET'), 3)
+
+    def test_memory_cards_modal_post_201_refresh_and_text_safety(self):
+        self.responses['memorias'] = []
+        self.open()
+        expect(self.page.locator('#memory-list')).to_contain_text('Toda história começa com um instante.')
+        expect(self.page.locator('#memory-add')).to_be_visible()
+        self.page.locator('#memory-add').click()
+        expect(self.page.locator('#memory-dialog')).to_be_visible()
+        self.page.keyboard.press('Escape')
+        expect(self.page.locator('#memory-dialog')).not_to_be_visible()
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.page.locator('#memory-add').click()
+        bounds = self.page.locator('#memory-dialog').bounding_box()
+        self.assertGreaterEqual(bounds['x'], 0)
+        self.assertLessEqual(bounds['x'] + bounds['width'], 390)
+        self.page.locator('[name=titulo]').fill('<script>Dia especial</script>')
+        self.page.locator('[name=data_memoria]').fill('2026-10-15')
+        self.page.locator('#memory-form [name=descricao]').fill('<img src=x onerror=alert(1)> risadas e carinho')
+        self.page.locator('#memory-submit').click()
+        expect(self.page.locator('#memory-feedback')).to_contain_text('Memória guardada com carinho!')
+        expect(self.page.locator('.memory-card')).to_have_count(1)
+        expect(self.page.locator('.memory-card h3')).to_have_text('<script>Dia especial</script>')
+        expect(self.page.locator('.memory-card p')).to_have_text('<img src=x onerror=alert(1)> risadas e carinho')
+        self.assertEqual(self.page.locator('.memory-card script, .memory-card img').count(), 0)
+        post = next(request for name, request in self.requests if name == 'memorias' and request.method == 'POST')
+        self.assertEqual(post.post_data_json, {
+            'titulo': '<script>Dia especial</script>',
+            'data_memoria': '2026-10-15',
+            'descricao': '<img src=x onerror=alert(1)> risadas e carinho',
+        })
+        self.assertEqual(sum(1 for name, request in self.requests if name == 'memorias' and request.method == 'GET'), 2)
+
+    def test_memory_post_error_is_not_reported_as_saved(self):
+        self.responses['memorias'] = []
+        self.responses['memorias_create'] = (405, {'error': 'Método não permitido.'})
+        self.open()
+        self.page.locator('#memory-add').click()
+        self.page.locator('[name=titulo]').fill('Um dia feliz')
+        self.page.locator('[name=data_memoria]').fill('2026-10-15')
+        self.page.locator('#memory-form [name=descricao]').fill('A gente sorriu muito.')
+        self.page.locator('#memory-submit').click()
+        expect(self.page.locator('#memory-form-status')).to_contain_text('backend ainda não habilita POST')
+        expect(self.page.locator('#memory-dialog')).to_be_visible()
+        expect(self.page.locator('#memory-feedback')).to_be_hidden()
 
     def test_planner_validation_success_and_poster(self):
         self.responses['ai'] = self.itinerary()

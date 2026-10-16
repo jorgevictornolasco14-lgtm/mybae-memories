@@ -26,6 +26,7 @@ export function validateItinerary(value) {
 }
 export function validateResponse(path, data) {
   if (path === "ai") return validateItinerary(data);
+  if (path === "memoriaCreate") return data;
   if (!Array.isArray(data) || !data.every(object)) throw new Error("O serviço enviou dados em um formato inesperado.");
   const valid = data.every((row) => {
     if (path === "memorias") return text(row.titulo) && isDate(row.data_memoria);

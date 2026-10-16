@@ -1,7 +1,7 @@
 import { CONFIG, ENDPOINTS } from "./config.js";
 import { validateResponse } from "./utils/validators.js";
 const pending = new Map();
-export function api(name, { method = ENDPOINTS[name]?.method, body, cache = "default" } = {}) {
+export function api(name, { method = ENDPOINTS[name]?.method, body, cache = "default", expectedStatus } = {}) {
   const endpoint = ENDPOINTS[name];
   if (!endpoint || method !== endpoint.method) return Promise.reject(new Error("Operação indisponível."));
   if (!CONFIG.API_BASE_URL.trim()) return Promise.reject(Object.assign(new Error("Nosso álbum ainda não está conectado. Tente novamente em breve."), { status: 503 }));
@@ -12,7 +12,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body, cache = "def
       (base.protocol !== "https:" && !(base.protocol === "http:" && ["localhost", "127.0.0.1"].includes(base.hostname)))) throw new Error();
     url = `${base.href.replace(/\/$/, "")}${endpoint.path}`;
   } catch { return Promise.reject(new Error("O endereço do serviço está inválido. Verifique a configuração do site.")); }
-  const key = JSON.stringify([url, method, body, cache]);
+  const key = JSON.stringify([url, method, body, cache, expectedStatus]);
   if (pending.has(key)) return pending.get(key);
   const request = (async () => {
     const controller = new AbortController();
@@ -30,8 +30,14 @@ export function api(name, { method = ENDPOINTS[name]?.method, body, cache = "def
             "Não foi possível concluir a solicitação. Tente novamente.";
         throw Object.assign(new Error(message), { status: response.status });
       }
+      if (expectedStatus && response.status !== expectedStatus) {
+        throw Object.assign(new Error(`O serviço respondeu HTTP ${response.status}; a memória só é confirmada com HTTP ${expectedStatus}.`), { status: response.status });
+      }
       let data;
-      try { data = await response.json(); }
+      try {
+        const payload = await response.text();
+        data = payload ? JSON.parse(payload) : null;
+      }
       catch { throw new Error("O serviço enviou uma resposta inválida. Tente novamente."); }
       return validateResponse(name, data);
     } catch (error) {

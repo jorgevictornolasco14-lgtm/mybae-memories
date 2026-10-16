@@ -90,10 +90,27 @@
           guardar o que fica no coração.
         </p>
       </div>
-      <div id="memory-list" class="timeline" aria-live="polite">
+      <div class="memory-actions">
+        <button id="memory-add" class="button primary" type="button">Adicionar memória ♡</button>
+      </div>
+      <p id="memory-feedback" class="memory-feedback" role="status" aria-live="polite" hidden></p>
+      <div id="memory-list" class="memory-grid" aria-live="polite" aria-busy="true">
         <p class="loading">Abrindo nosso livro de memórias…</p>
       </div>
     </section>
+    <dialog id="memory-dialog" class="memory-dialog" aria-labelledby="memory-dialog-title">
+      <form id="memory-form" class="memory-form" novalidate>
+        <div class="memory-form-heading">
+          <div><p class="eyebrow">UM INSTANTE SÓ DE VOCÊS</p><h2 id="memory-dialog-title">Guarde esse <em>momento.</em></h2></div>
+          <button id="memory-close" class="icon-button" type="button" aria-label="Fechar formulário">×</button>
+        </div>
+        <label>Título da memória<input name="titulo" required minlength="2" maxlength="120" placeholder="Aquele dia especial" /></label>
+        <label>Data da memória<input name="data_memoria" type="date" required /></label>
+        <label>O que aconteceu?<textarea name="descricao" required maxlength="1000" rows="4" placeholder="Conta um pouquinho sobre esse momento que fez a gente feliz..."></textarea><small class="memory-char-count" id="memory-char-count">0 / 1.000</small></label>
+        <p id="memory-form-status" class="memory-form-status" role="status" aria-live="polite"></p>
+        <div class="memory-form-actions"><button id="memory-cancel" class="button outline" type="button">Cancelar</button><button id="memory-submit" class="button primary" type="submit">Guardar memória ♡</button></div>
+      </form>
+    </dialog>
     <section id="galeria" class="section gallery-section">
       <div class="section-heading">
         <div>
