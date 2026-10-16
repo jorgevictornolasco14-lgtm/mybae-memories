@@ -26,6 +26,10 @@ A interface envia `POST /api/galeria` como `multipart/form-data`, com `file`, `l
 
 O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. GET e OPTIONS da origem publicada passaram; uma publicação real ainda depende de o endpoint aceitar o multipart descrito acima. O backend e seu deploy não foram alterados neste repositório.
 
+## Cadastro de encontros e roteiros manuais
+
+Verificação HTTP em 16/10/2026 às 03:46 UTC, com `Origin: https://mybae-memories.vercel.app`: `GET /api/encontros` respondeu HTTP 200 com um array vazio. O preflight `OPTIONS` para `POST /api/encontros` respondeu HTTP 405 e `Allow: GET`; não há contrato de gravação confirmado. O frontend manual pode compor e pré-visualizar um roteiro no componente existente, mas não deve afirmar que salvou nem atualizar o calendário até que o backend publique o POST e documente o payload e a resposta de sucesso.
+
 ## Exclusão administrativa
 
 Verificação HTTP em 16/10/2026 às 03:37 UTC, com `Origin: https://mybae-memories.vercel.app`: o preflight `OPTIONS` solicitando `DELETE` em `/api/galeria` e `/api/memorias` respondeu HTTP 405, com `Allow: GET, POST`. As rotas por registro `/api/galeria/{id}` e `/api/memorias/{id}` responderam 404 da Vercel. `/api/admin/session` e `/api/admin` também responderam 404. Portanto, o backend publicado não confirma endpoints DELETE nem uma sessão administrativa temporária; este frontend não deve exibir controles de exclusão nem tentar contornar essa ausência.

@@ -518,6 +518,9 @@
 }
 
 @media (max-width: 480px) {
+  .manual-steps-heading { align-items: flex-start; flex-direction: column; }
+  .manual-steps-heading .button, .manual-form-actions .button { width: 100%; min-height: 46px; }
+  .manual-step { padding: 12px; }
   .music-player { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
   .music-toggle { width: 48px; height: 48px; }
   .music-panel { bottom: 60px; }

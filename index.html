@@ -250,6 +250,7 @@
           Ideias personalizadas, com uso limitado. Confirme os detalhes dos
           locais antes de sair.
         </p>
+        <button id="manual-itinerary-open" class="button outline full" type="button">Criar roteiro manualmente ♡</button>
         <p id="planner-status" role="status"></p>
       </form>
     </section>
@@ -348,6 +349,30 @@
       <label>Data da fotografia<input name="data_foto" type="date" required /></label>
       <p id="upload-status" class="upload-status" role="status" aria-live="polite"></p>
       <div class="upload-actions"><button id="upload-cancel" class="button outline" type="button">Cancelar</button><button id="upload-submit" class="button primary" type="submit">Publicar foto ♡</button></div>
+    </form>
+  </dialog>
+  <dialog id="manual-itinerary-dialog" class="manual-itinerary-dialog" aria-labelledby="manual-itinerary-title">
+    <form id="manual-itinerary-form" class="manual-itinerary-form" novalidate>
+      <div class="upload-heading">
+        <div><p class="eyebrow">UM DIA ESPECIAL, DO NOSSO JEITO</p><h2 id="manual-itinerary-title">Criar roteiro <em>manual.</em></h2></div>
+        <button id="manual-itinerary-close" class="icon-button" type="button" aria-label="Fechar formulário">×</button>
+      </div>
+      <div class="form-grid">
+        <label class="span-2">Nome do encontro<input name="manual_titulo" required minlength="2" maxlength="100" /></label>
+        <label>Data<input name="manual_data" type="date" required /></label>
+        <label>Cidade<input name="manual_cidade" required minlength="2" maxlength="100" /></label>
+        <label>Horário de início<input name="manual_inicio" type="time" required /></label>
+        <label>Transporte<input name="manual_transporte" required maxlength="60" placeholder="Ex.: a pé, carro ou aplicativo" /></label>
+        <label class="span-2">Descrição<textarea name="manual_descricao" required maxlength="1000" rows="3"></textarea></label>
+      </div>
+      <div class="manual-steps-heading"><h3>Etapas do passeio</h3><button id="manual-add-step" class="button outline" type="button">Adicionar etapa +</button></div>
+      <p id="manual-step-limit" class="form-help">Adicione de 1 a 30 etapas. As informações são preenchidas por você.</p>
+      <div id="manual-steps" class="manual-steps"></div>
+      <p id="manual-itinerary-status" class="manual-itinerary-status" role="status" aria-live="polite"></p>
+      <div class="manual-form-actions">
+        <button id="manual-preview" class="button outline" type="button">Visualizar roteiro</button>
+        <button id="manual-save" class="button primary" type="button">Guardar nosso encontro ♡</button>
+      </div>
     </form>
   </dialog>
 </body>

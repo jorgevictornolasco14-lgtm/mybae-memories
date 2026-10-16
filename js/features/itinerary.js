@@ -90,6 +90,7 @@ export function initItinerary() {
     const metadata = [
       current.data ? formatDate(current.data) : "Um dia para nós",
       current.cidade,
+      current.transporte ? `Transporte: ${current.transporte}` : "",
       `${current.inicio}–${current.fim}`,
     ].join(" · ");
     $("#itinerary-output").innerHTML =
