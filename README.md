@@ -56,7 +56,9 @@ As imagens locais são inspirações já presentes no projeto, identificadas na 
 
 Preencha cidade, data, horário, duração, orçamento, tipo de passeio e transporte; preferências e restrições são opcionais. O formulário valida os dados, impede envios concorrentes e envia os mesmos nomes de campos do frontend original. Somente o backend chama a IA; nenhuma chave Gemini ou Groq deve ser inserida aqui.
 
-O roteiro recebido precisa passar pela validação antes de substituir a visualização atual. Os modos interativo e pôster preservam a apresentação do diário. Um roteiro ilustrativo original permanece explicitamente identificado como exemplo, sem encontro ou data cadastrados.
+Ao abrir o site, a seção de roteiros consulta `GET /api/roteiros` sem cache e mostra o primeiro registro publicado na ordem retornada pelo backend (`created_at` decrescente). A data do encontro e `updated_at` não definem o roteiro principal. Sem registros, há um convite para criar o primeiro roteiro; em falha, aparece uma mensagem com nova tentativa. O exemplo demonstrativo foi removido.
+
+Depois de um cadastro manual confirmado com HTTP 201, o roteiro retornado pelo servidor torna-se o principal e a lista é consultada novamente. Ao atualizar ou reabrir a página, os dados são recuperados da API. Prévias manuais e sugestões da IA continuam disponíveis, identificadas como prévia; não são tratadas como persistência. Os modos interativo e pôster mantêm os componentes existentes. Consulte o [comportamento e a verificação do último roteiro](docs/latest-itinerary.md).
 
 Para cada parada, pesquise o endereço pela API de mapas, confira os resultados e selecione uma correspondência. Só então aparece um marcador numerado no Leaflet; o endereço confirmado oferece um link de navegação. Não há coordenadas estimadas ou traçados de percurso. Os tiles são carregados diretamente do OpenStreetMap, com atribuição.
 

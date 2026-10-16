@@ -10,7 +10,7 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 | GET | /api/galeria | Confirmado: array com id, storage_path, legenda, descricao, data_foto, publicado, created_at, updated_at, imagem_url e url |
 | GET | /api/encontros | Array: id, titulo, data_encontro (`YYYY-MM-DD`), horario_inicio (`HH:mm` ou `HH:mm:ss`); horario_fim, cidade, local, endereco, descricao, preferencias, orcamento e status opcionais |
 | GET | /api/configuracoes | Confirmado: array; primeiro registro com nome_site, nome_pessoa_1, nome_pessoa_2, mensagem_principal, imagem_capa e data_inicio_relacionamento opcionais |
-| GET | /api/roteiros | Array: titulo, dados_json (objeto de roteiro); encontro_id opcional |
+| GET | /api/roteiros | Array de registros publicados em ordem de `created_at` decrescente: id, encontro_id, titulo, descricao, dados_json, versao, publicado, created_at e updated_at |
 | POST | /api/ai | Objeto de roteiro |
 | POST | /api/mapas | Array: nome (endereço exibido), latitude e longitude numéricas e válidas |
 

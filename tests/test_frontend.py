@@ -84,11 +84,12 @@ class FrontendTests(unittest.TestCase):
                 'endereco': body['etapas'][0]['endereco'], 'descricao': body['descricao'],
                 'status': 'Planejado',
             }
-            itinerary = {'id': 'created-itinerary', 'encontro_id': meeting['id'], 'titulo': body['titulo'], 'dados_json': dados}
+            itinerary = {'id': 'created-itinerary', 'encontro_id': meeting['id'], 'titulo': body['titulo'],
+                         'dados_json': dados, 'publicado': True, 'created_at': '2026-10-16T23:00:00Z'}
             value = self.responses.get('encontros_create', (201, {'success': True, 'encontro': meeting, 'roteiro': itinerary}))
             if isinstance(value, tuple) and value[0] == 201:
                 self.responses['encontros'] = [*self.responses.get('encontros', []), meeting]
-                self.responses['roteiros'] = [*self.responses.get('roteiros', []), itinerary]
+                self.responses['roteiros'] = [itinerary, *self.responses.get('roteiros', [])]
         else:
             value = self.responses.get(name, [])
         if isinstance(value, tuple):
@@ -104,8 +105,195 @@ class FrontendTests(unittest.TestCase):
         return {'titulo': 'Passeio de teste', 'cidade': 'Cidade de teste', 'inicio': '09:00', 'fim': '11:00',
                 'etapas': [{'nome': 'Parada de teste', 'horario': '09:00', 'descricao': 'Descrição de teste', 'busca': 'Endereço de teste'}]}
 
+    def published_itinerary(self, title='Nosso roteiro publicado', *, route_id='saved-route',
+                            created_at='2026-10-15T12:00:00Z', event_date='2026-10-25', image=''):
+        data = {**self.itinerary(), 'titulo': title, 'data': event_date,
+                'descricao': 'Um dia especial que guardamos.', 'transporte': 'Carro'}
+        data['etapas'] = [
+            {**data['etapas'][0], 'ordem': 1, 'imagem_url': image},
+            {'ordem': 2, 'nome': 'Segunda parada', 'horario': '10:00',
+             'descricao': 'Mais um momento juntos.', 'busca': 'Rua de teste, 200'},
+        ]
+        return {'id': route_id, 'encontro_id': f'meeting-{route_id}', 'titulo': title, 'dados_json': data,
+                'publicado': True, 'created_at': created_at, 'updated_at': created_at}
+
     def fill_planner(self):
         self.page.locator('[name=data]').fill(self.page.locator('[name=data]').get_attribute('min'))
+
+    def test_latest_itinerary_loading_then_real_route_without_example_flash(self):
+        pending = []
+        self.page.route('**/api/roteiros', lambda route: pending.append(route))
+        self.open()
+        expect(self.page.locator('#itinerary-output')).to_have_attribute('aria-busy', 'true')
+        expect(self.page.locator('#itinerary-output')).to_contain_text('Carregando nosso último rolê')
+        expect(self.page.locator('.itinerary-paper')).to_have_count(0)
+        expect(self.page.locator('#itinerary-notice')).to_be_empty()
+        for button in ['view-interactive', 'view-poster', 'export-png', 'export-pdf']:
+            expect(self.page.locator(f'#{button}')).to_be_disabled()
+        self.assertNotIn('Nosso domingo', self.page.locator('#roteiros').inner_text())
+        self.assertEqual(len(pending), 1)
+        row = self.published_itinerary()
+        pending[0].fulfill(content_type='application/json', body=json.dumps([row]))
+        expect(self.page.locator('.itinerary-title h3')).to_have_text(row['titulo'])
+        expect(self.page.locator('#itinerary-notice')).to_contain_text('Roteiro publicado')
+        expect(self.page.locator('#itinerary-output')).to_have_attribute('aria-busy', 'false')
+        expect(self.page.locator('#export-png')).to_be_enabled()
+        self.assertEqual(self.page.locator('.itinerary-step h4').all_text_contents(), ['Parada de teste', 'Segunda parada'])
+
+    def test_latest_itinerary_api_order_wins_over_future_dates_and_recent_edits(self):
+        latest = self.published_itinerary('Último salvo', route_id='latest', created_at='2026-10-16T12:00:00Z', event_date='2020-01-15')
+        older = self.published_itinerary('Encontro futuro', route_id='older', event_date='2028-12-25')
+        older['updated_at'] = '2026-10-17T12:00:00Z'
+        self.responses['roteiros'] = [latest, older]
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Último salvo')
+        expect(self.page.locator('.itinerary-title')).to_contain_text('Cidade de teste')
+        expect(self.page.locator('.itinerary-title')).to_contain_text('2020')
+        expect(self.page.locator('.itinerary-title')).to_contain_text('09:00–11:00')
+        expect(self.page.locator('.itinerary-title .script')).to_have_text(latest['dados_json']['descricao'])
+        expect(self.page.locator('#itinerary-notice')).not_to_contain_text('Exemplo')
+        self.assertEqual(self.page.locator('.saved-choices button').all_text_contents(), ['Último salvo', 'Encontro futuro'])
+        self.page.locator('#view-poster').click()
+        self.page.locator('.saved-choices button').nth(1).click()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Encontro futuro')
+        expect(self.page.locator('.itinerary-paper')).to_have_class(re.compile('poster-mode'))
+        self.page.reload()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Último salvo')
+        # Reopening also queries the server rather than a browser-only selection.
+        self.page.goto('about:blank')
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Último salvo')
+
+    def test_latest_itinerary_empty_invites_manual_creation_and_disables_export(self):
+        self.open()
+        expect(self.page.locator('#itinerary-output')).to_contain_text('Nosso primeiro rolê começa aqui')
+        expect(self.page.locator('.itinerary-paper')).to_have_count(0)
+        expect(self.page.locator('.saved-choices')).to_have_count(0)
+        expect(self.page.locator('#export-pdf')).to_be_disabled()
+        expect(self.page.locator('#view-poster')).to_be_disabled()
+        self.assertNotIn('Nosso domingo', self.page.locator('#roteiros').inner_text())
+        self.page.locator('#itinerary-output .text-link').click()
+        expect(self.page.locator('#manual-itinerary-dialog')).to_be_visible()
+
+    def test_latest_itinerary_http_invalid_json_and_network_errors_can_retry(self):
+        for failure in ['http', 'json', 'network']:
+            with self.subTest(failure=failure):
+                def fail(route):
+                    if failure == 'network':
+                        route.abort('failed')
+                    elif failure == 'json':
+                        route.fulfill(content_type='application/json', body='{not-json')
+                    else:
+                        route.fulfill(status=503, content_type='application/json', body='{}')
+                self.page.route('**/api/roteiros', fail)
+                self.open()
+                expect(self.page.locator('#itinerary-output')).to_contain_text('Não foi possível carregar nosso roteiro')
+                expect(self.page.locator('.itinerary-paper')).to_have_count(0)
+                expect(self.page.locator('#export-png')).to_be_disabled()
+                self.assertNotIn('Nosso domingo', self.page.locator('#roteiros').inner_text())
+                self.page.unroute('**/api/roteiros', fail)
+                self.responses['roteiros'] = [self.published_itinerary()]
+                self.page.locator('#itinerary-output .retry').click()
+                expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso roteiro publicado')
+
+    def test_latest_itinerary_delayed_initial_response_keeps_manual_preview(self):
+        pending = []
+        self.page.route('**/api/roteiros', lambda route: pending.append(route))
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        self.page.locator('#manual-preview').click()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+        pending[0].fulfill(content_type='application/json', body=json.dumps([self.published_itinerary()]))
+        expect(self.page.locator('#saved-itineraries')).to_have_attribute('aria-busy', 'false')
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+        expect(self.page.locator('#itinerary-notice')).to_contain_text('Prévia do roteiro')
+        expect(self.page.locator('.saved-choices button')).to_have_count(1)
+
+    def test_latest_itinerary_save_waits_for_201_updates_list_and_survives_reload(self):
+        self.responses['roteiros'] = [self.published_itinerary()]
+        pending = []
+        self.page.route('**/api/encontros', lambda route: pending.append(route) if route.request.method == 'POST' else self.mock_api(route))
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso roteiro publicado')
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-save')).to_have_attribute('aria-busy', 'true')
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso roteiro publicado')
+        self.assertEqual(self.page.locator('.saved-choices button').all_text_contents(), ['Nosso roteiro publicado'])
+        self.assertEqual(len(pending), 1)
+        self.mock_api(pending[0])
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Encontro salvo e publicado')
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+        expect(self.page.locator('#saved-itineraries')).to_have_attribute('aria-busy', 'false')
+        self.assertEqual(self.page.locator('.saved-choices button').all_text_contents(), ['Roteiro restaurado', 'Nosso roteiro publicado'])
+        expect(self.page.locator('.itinerary-step')).to_have_count(7)
+        expect(self.page.locator('#itinerary-notice')).to_contain_text('Roteiro publicado')
+        self.page.reload()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+        self.assertEqual(self.page.locator('.itinerary-step h4').all_text_contents(), [f'Local {i}' for i in range(1, 8)])
+
+    def test_latest_itinerary_save_ignores_stale_initial_read_and_recovers_list_error(self):
+        pending = []
+        def routes(route):
+            if not pending:
+                pending.append(route)
+            else:
+                self.mock_api(route)
+        self.page.route('**/api/roteiros', routes)
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Encontro salvo e publicado')
+        confirmed_rows = self.responses['roteiros']
+        self.responses['roteiros'] = (503, {})
+        pending[0].fulfill(content_type='application/json', body=json.dumps([self.published_itinerary('Resposta antiga')]))
+        expect(self.page.locator('#saved-itineraries')).to_contain_text('Não foi possível atualizar a lista')
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+        self.assertEqual(self.page.locator('.saved-choices button').all_text_contents(), ['Roteiro restaurado'])
+        self.responses['roteiros'] = confirmed_rows
+        self.page.locator('#manual-itinerary-close').click()
+        self.page.locator('#saved-itineraries .retry').click()
+        expect(self.page.locator('#saved-itineraries .retry')).to_have_count(0)
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Roteiro restaurado')
+
+    def test_latest_itinerary_persistent_photo_address_and_map_survive_modes_and_reload(self):
+        photo = 'https://example.supabase.co/storage/v1/object/public/photos/stage.jpg'
+        self.responses['roteiros'] = [self.published_itinerary(image=photo)]
+        self.responses['mapas'] = [{'nome': 'Rua confirmada', 'latitude': -19.92, 'longitude': -43.93}]
+        self.page.route(photo, lambda route: route.fulfill(content_type='image/jpeg', body=(ROOT/'assets/images/landscape.jpg').read_bytes()))
+        self.open()
+        image = self.page.locator('.itinerary-step img').first
+        expect(image).to_have_attribute('src', photo)
+        image.scroll_into_view_if_needed()
+        self.page.wait_for_function('(img) => img.complete && img.naturalWidth > 0', arg=image.element_handle())
+        self.assertTrue(image.evaluate('(img) => img.complete && img.naturalWidth > 0'))
+        control = self.page.locator('.location-controls').first
+        expect(control.locator('input')).to_have_value('Endereço de teste')
+        control.locator('button').click()
+        control.locator('select').select_option('0')
+        expect(self.page.locator('.map-pin')).to_have_count(1)
+        self.page.locator('#view-poster').click()
+        expect(control).to_be_hidden()
+        self.page.locator('#view-interactive').click()
+        expect(self.page.locator('.map-pin')).to_have_count(1)
+        self.assertIn('destination=-19.92,-43.93', self.page.locator('.confirmed-address a').get_attribute('href'))
+        self.page.reload()
+        expect(self.page.locator('.itinerary-step img').first).to_have_attribute('src', photo)
+        expect(self.page.locator('.location-controls input').first).to_have_value('Endereço de teste')
+
+    def test_latest_itinerary_broken_photo_uses_existing_placeholder(self):
+        self.responses['roteiros'] = [self.published_itinerary(image='/assets/images/missing-stage.jpg')]
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso roteiro publicado')
+        self.page.locator('.itinerary-step').first.scroll_into_view_if_needed()
+        expect(self.page.locator('.step-placeholder')).to_have_count(2)
+        expect(self.page.locator('.step-image')).to_have_count(0)
 
     def test_static_assets_imports_and_no_login(self):
         import re
@@ -827,13 +1015,15 @@ class FrontendTests(unittest.TestCase):
         self.fill_planner()
         self.page.locator('#planner-form button[type=submit]').click()
         expect(self.page.locator('#planner-status')).to_contain_text('roteiro inválido')
-        expect(self.page.locator('.itinerary-step')).to_have_count(6)
+        expect(self.page.locator('.itinerary-step')).to_have_count(0)
+        expect(self.page.locator('#itinerary-output')).to_contain_text('Nosso primeiro rolê começa aqui')
         self.responses['ai'] = (429, {})
         self.page.locator('#planner-form button[type=submit]').click()
         expect(self.page.locator('#planner-status')).to_contain_text('Muitas solicitações')
         expect(self.page.locator('#planner-form button[type=submit]')).to_be_enabled()
 
     def test_maps_confirmed_marker_and_navigation(self):
+        self.responses['roteiros'] = [self.published_itinerary()]
         self.responses['mapas'] = [{'nome': 'Local de teste', 'latitude': -19.92, 'longitude': -43.93}]
         self.open()
         control = self.page.locator('.location-controls').first
@@ -866,6 +1056,7 @@ class FrontendTests(unittest.TestCase):
         self.assertIn('demorou', result['timeout'])
 
     def test_responsive_navigation_and_reduced_motion(self):
+        self.responses['roteiros'] = [self.published_itinerary(image='/assets/images/landscape.jpg')]
         self.open()
         for width in [320, 375, 768, 1024, 1440, 1920]:
             self.page.set_viewport_size({'width': width, 'height': 900})
@@ -917,6 +1108,50 @@ class FrontendTests(unittest.TestCase):
         self.assertTrue(result['images'][3].startswith('https://x.supabase.co/'))
         self.assertIn('/storage/v1/object/sign/', result['images'][4])
 
+    def test_latest_saved_itinerary_empty_response_without_ai(self):
+        self.open()
+        expect(self.page.locator('#itinerary-output')).to_contain_text('Nosso primeiro rolê começa aqui.')
+        self.assertFalse(any(name == 'ai' for name, _ in self.requests))
+        expect(self.page.locator('#saved-itineraries button')).to_have_count(0)
+
+    def test_latest_saved_itinerary_loads_one_route_with_persistent_and_missing_photos(self):
+        data = self.itinerary()
+        data.update({'data': '2027-01-15', 'transporte': 'A pé', 'fim': '17:00'})
+        first = {**data['etapas'][0], 'imagem_url': '/assets/images/park.jpg'}
+        missing = {**first, 'nome': 'Cinema', 'horario': '15:30', 'imagem_url': '/assets/images/not-persisted-anymore.jpg'}
+        last = {**first, 'nome': 'Sorvete', 'horario': '16:30', 'imagem_url': ''}
+        data['etapas'] = [first, missing, last]
+        self.responses['roteiros'] = [{'id': 'saved-one', 'encontro_id': 'event-one', 'titulo': data['titulo'],
+                                      'created_at': '2026-10-16T12:00:00Z', 'dados_json': data}]
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text(data['titulo'])
+        expect(self.page.locator('.itinerary-title')).to_contain_text('Transporte: A pé')
+        expect(self.page.locator('.itinerary-title')).to_contain_text('09:00–17:00')
+        expect(self.page.locator('.itinerary-step')).to_have_count(3)
+        expect(self.page.locator('.itinerary-step').nth(0).locator('img')).to_have_attribute('src', f'{self.origin}/assets/images/park.jpg')
+        self.page.locator('.itinerary-step').nth(1).scroll_into_view_if_needed()
+        expect(self.page.locator('.itinerary-step').nth(1).locator('.step-placeholder')).to_be_visible()
+        expect(self.page.locator('.itinerary-step').nth(2).locator('.step-placeholder')).to_have_count(1)
+        self.assertEqual(self.page.locator('.itinerary-step time').all_text_contents(), ['09:00', '15:30', '16:30'])
+        expect(self.page.locator('.itinerary-step').nth(0).locator('a')).to_have_attribute('href', re.compile('Endere%C3%A7o'))
+        self.assertFalse(any(name == 'ai' for name, _ in self.requests))
+
+    def test_latest_saved_itinerary_loads_newest_and_keeps_older_routes_selectable(self):
+        # API contract: creation descending, then ID descending for ties.
+        latest = {**self.itinerary(), 'titulo': 'Último roteiro salvo'}
+        older = {**self.itinerary(), 'titulo': 'Roteiro anterior'}
+        self.responses['roteiros'] = [
+            {'id': 'route-3', 'titulo': latest['titulo'], 'created_at': '2026-10-16T12:00:00Z', 'dados_json': latest},
+            {'id': 'route-2', 'titulo': 'Mesmo instante', 'created_at': '2026-10-16T12:00:00Z', 'dados_json': self.itinerary()},
+            {'id': 'route-1', 'titulo': older['titulo'], 'created_at': '2026-10-15T12:00:00Z', 'dados_json': older},
+        ]
+        self.open()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text(latest['titulo'])
+        expect(self.page.locator('#saved-itineraries button')).to_have_count(3)
+        self.page.locator('#saved-itineraries button').nth(2).click()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text(older['titulo'])
+        self.assertFalse(any(name == 'ai' for name, _ in self.requests))
+
     def test_published_itinerary_link_and_invalid_coordinates(self):
         self.open()
         today = self.page.evaluate("async () => (await import('/js/utils/dates.js')).todayKey()")
@@ -933,6 +1168,7 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(self.page.locator('.map-pin').count(), 0)
 
     def test_real_png_pdf_exports(self):
+        self.responses['roteiros'] = [self.published_itinerary(image='/assets/images/landscape.jpg')]
         self.open()
         output = ROOT/'test-results'
         output.mkdir(exist_ok=True)

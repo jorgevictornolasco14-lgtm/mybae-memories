@@ -10,7 +10,9 @@ export function initItineraryExport() {
       if (!window.htmlToImage || (format === "pdf" && !window.jspdf))
         throw new Error("A exportação não carregou. Atualize a página.");
       await document.fonts.ready;
-      clone = $("#itinerary-output .itinerary-paper").cloneNode(true);
+      const paper = $("#itinerary-output .itinerary-paper");
+      if (!paper) throw new Error("Escolha ou crie um roteiro antes de exportar.");
+      clone = paper.cloneNode(true);
       clone.classList.add("poster-mode");
       exportHost = document.createElement("div");
       exportHost.style.cssText =
@@ -77,7 +79,7 @@ export function initItineraryExport() {
       status.textContent = `Não foi possível exportar: ${error.message}`;
     } finally {
       exportHost?.remove();
-      buttons.forEach((b) => (b.disabled = false));
+      buttons.forEach((b) => (b.disabled = !$("#itinerary-output .itinerary-paper")));
     }
   }
   $("#export-png").addEventListener("click", () => exportImage("png"));

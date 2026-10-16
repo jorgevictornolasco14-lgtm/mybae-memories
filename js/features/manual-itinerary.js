@@ -372,15 +372,15 @@ export function initManualItinerary(setItinerary) {
           503: "O serviço está temporariamente indisponível. Seus dados continuam no formulário; tente novamente mais tarde.",
         },
       });
-      setItinerary(hasPhotos ? itinerary : result.roteiro.dados_json, false);
+      setItinerary(result.roteiro.dados_json, true);
       saved = true;
       saveButton.textContent = "Encontro guardado ✓";
       status.classList.remove("error");
       status.textContent = hasPhotos
-        ? "Encontro salvo e publicado. As fotografias escolhidas aparecem somente na prévia local; não enviamos URLs temporárias como imagens permanentes."
+        ? "Encontro salvo e publicado. As fotografias selecionadas não foram enviadas; o roteiro publicado mostra somente imagens persistidas."
         : "Encontro salvo e publicado. A agenda foi atualizada; selecione a data para ver os detalhes.";
       window.dispatchEvent(new CustomEvent("mybae:meeting-created", {
-        detail: { id: result.encontro.id, date: result.encontro.data_encontro },
+        detail: { id: result.encontro.id, date: result.encontro.data_encontro, roteiro: result.roteiro },
       }));
     } catch (error) {
       status.classList.add("error");
