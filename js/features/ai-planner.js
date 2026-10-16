@@ -32,7 +32,7 @@ export function initPlanner(setItinerary) {
     } finally {
       event.target.setAttribute("aria-busy", "false");
       button.disabled = false;
-      button.innerHTML = "Criar nosso roteiro com IA <span>✧</span>";
+      button.textContent = "Criar nosso passeio ♡";
     }
   });
 }

@@ -1,18 +1,22 @@
 :root {
-  --color-black: #17151c;
-  --color-black-soft: #25212a;
-  --color-lilac: #a890c5;
-  --color-lilac-light: #d8c8e8;
-  --color-gray: #77717c;
-  --color-gray-light: #b8afbc;
-  --color-nude: #ead8cd;
-  --color-nude-light: #f7f0ec;
-  --color-pink: #d78da8;
-  --color-pink-light: #f2cedb;
+  --color-rose-ink: #91375f;
+  --color-white: #FFFFFF;
+  --shadow-romance: 0 8px 28px #91375f0d;
+  --color-paper: #FFF5F8;
+  --color-black: #241C26;
+  --color-black-soft: #382C35;
+  --color-lilac: #D978A5;
+  --color-lilac-light: #FADADD;
+  --color-gray: #715560;
+  --color-gray-light: #715560;
+  --color-nude: #FADADD;
+  --color-nude-light: #FFF5F8;
+  --color-pink: #D978A5;
+  --color-pink-light: #F5A9C4;
   --font-body: "DM Sans", sans-serif;
   --font-title: "Playfair Display", Georgia, serif;
   --radius: 16px;
-  --border: 1px solid #dcd2cd;
+  --border: 1px solid #edbed1;
   --tone-806277: #806277;
   --tone-96687f: #96687f;
   --tone-e8daf5: #e8daf5;
@@ -64,7 +68,7 @@
   --tone-e9dfda: #e9dfda;
   --tone-17151c0a: #17151c0a;
   --tone-d2c4c4: #d2c4c4;
-  --tone-fbf6ec: #fbf6ec;
+  --tone-fbf6ec: #FFF5F8;
   --tone-d6c7c7: #d6c7c7;
   --tone-9b6d84: #9b6d84;
   --tone-312634: #312634;
@@ -92,5 +96,4 @@
   --tone-9b6488: #9b6488;
   --tone-e8dce9: #e8dce9;
   --tone-17151c33: #17151c33;
-  --color-paper: var(--tone-fbf6ec);
 }

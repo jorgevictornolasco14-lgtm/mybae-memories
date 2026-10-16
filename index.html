@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#17151c" />
+  <meta name="theme-color" content="#FADADD" />
   <meta name="description"
     content="My Bae — o pequeno universo de Jorge e Maria. Memórias, fotografias e novos lugares para descobrir juntos." />
   <meta property="og:title" content="My Bae — Jorge &amp; Maria" />
@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/animations.css" />
   <link rel="stylesheet" href="/css/responsive.css" />
+  <link rel="stylesheet" href="/css/romance.css" />
   <link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css" />
   <script src="/assets/vendor/leaflet/leaflet.js" defer></script>
   <script src="/assets/vendor/html-to-image.js" defer></script>
@@ -57,6 +58,9 @@
         <div id="together" class="together" hidden></div>
       </div>
       <div class="hero-art" aria-label="nossos momentos" aria-hidden="true">
+        <img class="sticker hero-bow" src="/assets/stickers/bow.svg" alt="" width="80" height="60" />
+        <img class="sticker hero-heart" src="/assets/stickers/heart.svg" alt="" width="54" height="54" />
+        <img class="sticker hero-sparkle" src="/assets/stickers/sparkle.svg" alt="" width="44" height="44" />
         <span class="hand-note note-top">a vida é mais bonita<br />com você. <span>♡</span></span>
         <figure class="polaroid polaroid-back">
           <img src="/assets/images/flowers.jpg" alt="luv u bae" width="340" height="420" />
@@ -148,6 +152,7 @@
       </div>
       <div class="calendar-layout">
         <div class="calendar">
+          <img class="sticker calendar-flower" src="/assets/stickers/flower.svg" alt="" aria-hidden="true" width="32" height="32" />
           <div class="calendar-top">
             <h3 id="calendar-month" aria-live="polite"></h3>
             <div>
@@ -187,14 +192,13 @@
     <section id="planejador" class="planner section">
       <div class="planner-intro">
         <p class="eyebrow">04 / MAIS HISTÓRIAS PARA CONTAR</p>
-        <span class="planner-star" aria-hidden="true">✳</span>
+        <img class="planner-star sticker" src="/assets/stickers/flower.svg" alt="" aria-hidden="true" width="56" height="56" />
         <h2>
           Um dia comum.<br />Uma companhia<br /><em>extraordinária.</em>
         </h2>
         <p>Planeje nosso próximo encontro ♡</p>
         <p class="muted-light">
-          Diga o que combina com a gente. A inteligência artificial cuida das
-          ideias, e nós cuidamos de viver.
+          Conte como você imagina esse dia especial. Nós cuidamos dos detalhes para criar novas memórias juntos. ♡
         </p>
         <div class="planner-note">
           <span>✧</span>
@@ -206,7 +210,7 @@
       <form id="planner-form" class="planner-form">
         <div class="form-title">
           <h3>Onde vamos fazer memórias?</h3>
-          <span>♡</span>
+          <img class="form-bow sticker" src="/assets/stickers/bow.svg" alt="" aria-hidden="true" width="44" height="34" />
         </div>
         <div class="form-grid">
           <label class="span-2">Cidade<input name="cidade" value="Belo Horizonte, MG" required minlength="2"
@@ -238,7 +242,7 @@
               placeholder="Alimentação, acessibilidade, algo para evitar…" maxlength="800" /></label>
         </div>
         <button class="button primary full" type="submit">
-          Criar nosso roteiro com IA <span>✧</span>
+          Criar nosso passeio ♡
         </button>
         <p class="form-help">
           Ideias personalizadas, com uso limitado. Confirme os detalhes dos

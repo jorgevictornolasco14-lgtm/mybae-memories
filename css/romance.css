@@ -1,0 +1,99 @@
+/* Romantic skin: existing grids, breakpoints and interactions are preserved. */
+:root { color-scheme: light; }
+.site-header, footer {
+  background: var(--color-nude-light); color: var(--color-black);
+  border-color: var(--color-pink-light);
+}
+.site-header nav, footer p, .hero-bottom, .hero-message,
+.config-status, .planner-intro .muted-light { color: var(--color-gray); }
+.site-header nav { background-color: var(--color-nude-light); }
+.nav-cta { border-color: var(--color-pink-light); border-radius: 24px; }
+.nav-cta:hover { background: var(--color-pink-light); }
+.nav-cta span, .menu-toggle { color: var(--color-rose-ink); }
+.hero {
+  background: radial-gradient(ellipse at 80% 45%, #f5a9c445, transparent 58%), linear-gradient(120deg, #fff5f8, #fadadd);
+  color: var(--color-black);
+}
+.hero h1 em, .planner h2 em, h2 em,
+.hero .eyebrow, .planner .eyebrow, .together, .hand-note,
+.planner-note, .section-heading .eyebrow { color: var(--color-rose-ink); }
+.button { border-radius: 24px; }
+.primary, .memory-actions .button { background: var(--color-pink-light); color: var(--color-black); }
+.primary:hover, .memory-actions .button:hover { background: var(--color-nude); }
+.outline { background: #ffffff80; border-color: #dfabc1; }
+.outline:hover, .icon-button:hover { background: var(--color-nude); }
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible { outline-color: var(--color-rose-ink); }
+.polaroid { background: var(--color-white); border-color: #edbed1; box-shadow: 0 14px 38px #91375f1f; border-radius: 4px; }
+.tape { background: #f5a9c499; }
+.ribbon { background: var(--color-nude); color: var(--color-rose-ink); border-color: #edbed1; }
+.gallery-section, .closing { background: #fce6ed; }
+.history { background: var(--color-nude-light); }
+.memory-card, .photo-card, .calendar, .itinerary-paper, .music-panel { border-color: #edbed1; box-shadow: var(--shadow-romance); }
+.memory-card { background: linear-gradient(145deg, #fff, #fff5f8); border-radius: 16px; }
+.memory-heart { color: var(--color-rose-ink); }
+.memory-card::after {
+  right: 12px; bottom: 10px; width: 30px; height: 30px; border: 0; border-radius: 0;
+  background: url('/assets/stickers/heart.svg') center / contain no-repeat; opacity: .24;
+}
+.photo-card { background: var(--color-white); border: 1px solid #edbed1; border-radius: 6px; }
+.photo-card:hover, .photo-card-shell:nth-child(2n) .photo-card:hover { transform: rotate(0) translateY(-3px); }
+.calendar { position: relative; background: var(--color-white); border-radius: 20px; }
+.calendar-flower { display: block; margin: -6px 0 8px; }
+.calendar-days button { border-radius: 12px; }
+.calendar-days button:hover { background: var(--color-nude-light); }
+.calendar-days .selected, .calendar-days .selected:hover { background: var(--color-nude); }
+.calendar-days .today { border: 2px solid var(--color-rose-ink); font-weight: 700; }
+.event-date { background: var(--color-nude); }
+.weekdays { color: var(--color-gray); }
+.planner { background: linear-gradient(135deg, #fadadd, #fff5f8); color: var(--color-black); border-block: 1px solid #edbed1; }
+.planner-star { top: 28px; width: 32px; height: 32px; }
+.planner-form { background: #fff9fb; border: 1px solid #edbed1; border-radius: 24px; box-shadow: 0 12px 36px #91375f0d; }
+.form-title { gap: 12px; }
+.form-bow { flex: 0 0 44px; }
+.planner-form label { color: #62424f; font-size: 12px; }
+input, select, textarea, .planner-form input, .planner-form select, .planner-form textarea {
+  border-color: #dfabc1; background: var(--color-white); color: var(--color-black); color-scheme: light; border-radius: 10px;
+}
+input::placeholder, textarea::placeholder, .planner-form input::placeholder, .planner-form textarea::placeholder { color: #7b606c; opacity: 1; }
+.form-help, .optional { color: var(--color-gray); opacity: 1; }
+.planner-form .form-help { font-size: 11px; }
+.segmented { border-color: #edbed1; background: var(--color-nude); }
+.segmented button.active { background: var(--color-white); color: var(--color-rose-ink); }
+.itinerary-paper { background: #fff9fb; border-radius: 18px; }
+.itinerary-title { border-color: #edbed1; }
+.itinerary-title::before {
+  content: ''; display: block; width: 38px; height: 30px; margin: 0 auto 14px;
+  background: url('/assets/stickers/bow.svg') center / contain no-repeat;
+}
+.itinerary-step { border-color: #edbed1; background: var(--color-white); }
+.step-number { background: var(--color-rose-ink); border-color: #fff9fb; color: white; }
+.time-tag { background: var(--color-nude); color: #62424f; }
+.step-placeholder { background: #fce6ed; }
+.map-empty { background: var(--color-nude-light); border: 1px dashed #edbed1; }
+.saved-choices button { background: var(--color-nude-light); border-color: #edbed1; color: #62424f; }
+.music-toggle { background: var(--color-pink-light); border-color: #dfabc1; box-shadow: 0 5px 22px #91375f20; }
+.music-heading::before {
+  content: ''; flex: 0 0 22px; height: 22px; margin-top: 5px;
+  background: url('/assets/stickers/heart.svg') center / contain no-repeat;
+}
+.music-controls .button { border-radius: 14px; }
+.music-heading > div { flex: 1; }
+.music-panel { max-height: calc(100dvh - 100px); overflow-y: auto; }
+.music-loop input { width: 16px; height: 16px; min-height: 16px; margin: 0; }
+.music-controls input, .music-progress { accent-color: var(--color-rose-ink); }
+.sticker { pointer-events: none; user-select: none; object-fit: contain; }
+.hero-art > .sticker { position: absolute; z-index: 3; }
+.hero-bow { top: -5px; left: 5%; transform: rotate(-15deg); }
+.hero-heart { bottom: 18px; left: 5%; transform: rotate(-12deg); }
+.hero-sparkle { right: -4%; top: 42px; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-heart { animation: romantic-float 6s ease-in-out infinite; }
+}
+@keyframes romantic-float { 50% { transform: translateY(-7px) rotate(-8deg); } }
+@media (max-width: 760px) {
+  .hero-bow { width: 64px; height: 48px; top: 0; }
+  .hero-sparkle { right: 0; width: 32px; height: 32px; }
+  .planner-star { position: static; display: block; margin-bottom: 18px; width: 40px; height: 40px; }
+}
+@media print { .itinerary-paper { box-shadow: none; } }
