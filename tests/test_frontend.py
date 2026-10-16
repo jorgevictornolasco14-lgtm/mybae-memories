@@ -541,6 +541,72 @@ class FrontendTests(unittest.TestCase):
         self.page.locator('#prev-month').click()
         expect(self.page.locator('#calendar-month')).to_have_text(before)
 
+    def test_calendar_filled_heart_october17_responsive_and_month_navigation(self):
+        self.page.clock.install(time='2026-10-16T12:00:00-03:00')
+        self.responses['encontros'] = [
+            {'id': 'october', 'titulo': 'Nosso Role', 'data_encontro': '2026-10-17', 'horario_inicio': '09:00'},
+            {'id': 'october-second', 'titulo': 'Outro encontro', 'data_encontro': '2026-10-17', 'horario_inicio': '16:00'},
+            {'id': 'november', 'titulo': 'Próximo rolê', 'data_encontro': '2026-11-17', 'horario_inicio': '14:00'},
+        ]
+        self.open()
+        expect(self.page.locator('#calendar-month')).to_have_text('outubro de 2026')
+        date = self.page.locator('#calendar-days [data-date="2026-10-17"]')
+        empty = self.page.locator('#calendar-days [data-date="2026-10-18"]')
+        expect(date).to_have_attribute('aria-label', '17 de outubro de 2026, 2 encontros')
+        expect(date).to_have_text('17')
+        expect(empty).to_have_text('18')
+        expect(empty).to_have_attribute('aria-label', '18 de outubro de 2026')
+        self.assertEqual(empty.evaluate('(button) => getComputedStyle(button, "::after").content'), 'none')
+        # Two events on October 17 produce one CSS marker and one marked cell.
+        expect(self.page.locator('#calendar-days .has-event')).to_have_count(1)
+        self.assertEqual(date.evaluate('(button) => getComputedStyle(button, "::after").content').count('♥'), 1)
+        today = self.page.locator('#calendar-days [data-date="2026-10-16"]')
+        expect(today).to_have_class(re.compile(r'\btoday\b'))
+        expect(today).to_have_attribute('aria-current', 'date')
+        self.assertEqual(today.evaluate('(button) => getComputedStyle(button).borderTopStyle'), 'solid')
+        date.click()
+        expect(self.page.locator('#event-details-dialog')).to_be_visible()
+        expect(self.page.locator('.event-dialog-item')).to_have_count(2)
+        expect(self.page.locator('#event-dialog-list')).to_contain_text('Nosso Role')
+        self.page.locator('#event-dialog-close').click()
+        expect(date).to_have_class(re.compile('selected.*has-event'))
+        expect(date).to_have_attribute('aria-pressed', 'true')
+        output = ROOT/'test-results'
+        output.mkdir(exist_ok=True)
+        for width, label in [(1440, 'desktop'), (320, 'mobile')]:
+            self.page.set_viewport_size({'width': width, 'height': 1000})
+            if self.page.locator('#music-panel').is_visible():
+                self.page.locator('#music-close').click()
+            style = date.evaluate('''(button) => {
+              const heart = getComputedStyle(button, '::after');
+              const palette = document.createElement('span');
+              palette.style.color = 'var(--color-pink)';
+              button.append(palette);
+              const pink = getComputedStyle(palette).color;
+              palette.remove();
+              return { content: heart.content, color: heart.color, pink,
+                top: heart.top, size: heart.fontSize };
+            }''')
+            self.assertEqual(style['content'].strip('"'), '\u2665\ufe0e')
+            self.assertEqual(style['color'], style['pink'])
+            self.assertEqual(style['top'], '1px')
+            self.assertEqual(style['size'], '10px')
+            marked, unmarked = date.bounding_box(), empty.bounding_box()
+            self.assertAlmostEqual(marked['width'], unmarked['width'], delta=1)
+            self.assertAlmostEqual(marked['height'], unmarked['height'], delta=1)
+            self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), width)
+            self.page.locator('.calendar').screenshot(path=str(output/f'calendar-heart-{label}.png'))
+        self.page.locator('#next-month').click()
+        expect(self.page.locator('#event-list')).to_have_attribute('aria-busy', 'false')
+        november = self.page.locator('#calendar-days [data-date="2026-11-17"]')
+        expect(november).to_have_class('has-event')
+        expect(november).to_have_attribute('aria-label', '17 de novembro de 2026, 1 encontro')
+        self.assertEqual(november.evaluate('(button) => getComputedStyle(button, "::after").content').count('♥'), 1)
+        self.page.locator('#prev-month').click()
+        expect(self.page.locator('#event-list')).to_have_attribute('aria-busy', 'false')
+        expect(date).to_have_class('has-event')
+        self.assertEqual(date.evaluate('(button) => getComputedStyle(button, "::after").content').count('♥'), 1)
+
     def test_calendar_timezone_and_leap_day(self):
         self.open()
         result = self.page.evaluate("""async () => {
@@ -1002,6 +1068,8 @@ class FrontendTests(unittest.TestCase):
         self.assertFalse(any(name == 'galeria' and request.method == 'POST' for name, request in self.requests))
         self.page.locator('#manual-itinerary-close').click()
         expect(self.page.locator(f'#calendar-days [data-date="{today}"]')).to_have_class(re.compile('has-event'))
+        self.assertEqual(self.page.locator(f'#calendar-days [data-date="{today}"]').evaluate(
+            '(button) => getComputedStyle(button, "::after").content').count('♥'), 1)
         self.page.locator(f'#calendar-days [data-date="{today}"]').click()
         expect(self.page.locator('#event-details-dialog')).to_be_visible()
         expect(self.page.locator('#event-dialog-list')).to_contain_text('Nosso Rolê')

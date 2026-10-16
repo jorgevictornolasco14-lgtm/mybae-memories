@@ -109,7 +109,7 @@ export function initCalendar(onItinerary) {
     days.innerHTML = "<span></span>".repeat(first) + Array.from({ length: count }, (_, i) => {
       const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(i + 1).padStart(2, "0")}`;
       const dayEvents = events.filter((row) => row.data_encontro === key);
-      return `<button class="${key === current ? "today " : ""}${selected === key ? "selected " : ""}${dayEvents.length ? "has-event" : ""}" data-date="${key}" aria-label="${e(formatDate(key))}${dayEvents.length ? `, ${dayEvents.length} encontro(s)` : ""}" ${key === current ? 'aria-current="date"' : ""} aria-pressed="${selected === key}">${i + 1}</button>`;
+      return `<button class="${key === current ? "today " : ""}${selected === key ? "selected " : ""}${dayEvents.length ? "has-event" : ""}" data-date="${key}" aria-label="${e(formatDate(key))}${dayEvents.length ? `, ${dayEvents.length} ${dayEvents.length === 1 ? "encontro" : "encontros"}` : ""}" ${key === current ? 'aria-current="date"' : ""} aria-pressed="${selected === key}">${i + 1}</button>`;
     }).join("");
     days.setAttribute("aria-busy", "false");
     days.querySelectorAll("button").forEach((button) => {

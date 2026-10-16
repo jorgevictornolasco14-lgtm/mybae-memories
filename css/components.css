@@ -541,12 +541,12 @@
 }
 
 .calendar-days .has-event:after {
-  content: "♡";
+  content: "\2665\FE0E";
   position: absolute;
   top: 1px;
   left: 0;
   right: 0;
-  color: var(--tone-a04771);
+  color: var(--color-pink);
   font-size: 10px;
   line-height: 1;
   pointer-events: none;
@@ -574,7 +574,7 @@
 }
 
 .calendar-legend span {
-  color: var(--tone-a04771);
+  color: var(--color-pink);
   font-size: 16px;
 }
 
