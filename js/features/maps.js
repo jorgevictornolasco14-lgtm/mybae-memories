@@ -1,6 +1,7 @@
-import { api } from "./api.js";
+import { api } from "../api.js";
 export function bindMaps(container, itinerary) {
   let map;
+  let disposed = false;
   const markers = new Map();
   const mapBox = container.querySelector(".route-map"),
     empty = container.querySelector(".map-empty");
@@ -55,6 +56,7 @@ export function bindMaps(container, itinerary) {
           method: "POST",
           body: { query: input.value },
         });
+        if (disposed) return;
         if (!results.length) {
           message.textContent =
             "Nenhum resultado. Corrija o nome ou acrescente o endereço.";
@@ -74,11 +76,18 @@ export function bindMaps(container, itinerary) {
         select.addEventListener("change", () => {
           if (select.value === "") return;
           const location = results[Number(select.value)];
-          addMarker(index, location);
+          try { addMarker(index, location); }
+          catch (error) { message.textContent = error.message; return; }
           control.parentElement.querySelector(".confirmed-address")?.remove();
           const address = document.createElement("p");
           address.className = "confirmed-address";
-          address.textContent = `Local selecionado: ${location.nome}`;
+          address.textContent = `Local selecionado: ${location.nome} `;
+          const link = document.createElement("a");
+          link.href = `https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Como chegar ↗";
+          address.append(link);
           control.parentElement.append(address);
           message.textContent =
             "Correspondência selecionada no OpenStreetMap. Confirme os detalhes com o estabelecimento.";
@@ -92,6 +101,7 @@ export function bindMaps(container, itinerary) {
     });
   });
   return () => {
+    disposed = true;
     if (map) {
       map.remove();
       map = null;

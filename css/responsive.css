@@ -74,7 +74,7 @@
   }
   .menu-toggle {
     display: block;
-    color: #e8dce9;
+    color: var(--tone-e8dce9);
   }
   .site-header nav {
     display: none;
@@ -82,12 +82,12 @@
     top: 85px;
     left: 0;
     right: 0;
-    background: #25212a;
+    background: var(--color-black-soft);
     padding: 25px 6%;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    box-shadow: 0 15px 20px #17151c33;
+    box-shadow: 0 15px 20px var(--tone-17151c33);
   }
   .site-header nav.open {
     display: flex;
@@ -214,7 +214,7 @@
     margin-bottom: 28px;
   }
   .planner h2 {
-    font-size: 46px;
+    font-size: clamp(32px, 8.5vw, 46px);
   }
   .planner-star {
     top: 40px;
@@ -235,9 +235,6 @@
   }
   .planner .muted-light {
     max-width: 100%;
-  }
-  .planner h2 br:nth-child(2) {
-    display: none;
   }
   .itinerary-steps {
     grid-template-columns: 1fr;
@@ -403,4 +400,15 @@
   .itinerary-step {
     break-inside: avoid;
   }
+}
+
+@media (max-width: 480px) {
+ .form-grid { grid-template-columns: minmax(0, 1fr); }
+ input, select, textarea, .planner-form input, .planner-form select, .planner-form textarea { font-size: 16px; }
+ .calendar { padding: 14px; }
+ .calendar-top h3 { font-size: 20px; }
+ .calendar-top > div { gap: 0; }
+ .itinerary-toolbar { flex-wrap: wrap; }
+ .icon-button, .location-controls button, .segmented button { min-height: 44px; }
+ .itinerary-step { grid-template-columns: 80px minmax(0, 1fr); }
 }

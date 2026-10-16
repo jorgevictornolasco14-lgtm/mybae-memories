@@ -97,7 +97,7 @@ textarea:focus-visible {
   margin-bottom: 48px;
 }
 .section-heading .eyebrow {
-  color: #806277;
+  color: var(--tone-806277);
   margin-bottom: 18px;
 }
 .section-heading > p {
@@ -107,7 +107,7 @@ textarea:focus-visible {
   max-width: 360px;
 }
 h2 em {
-  color: #96687f;
+  color: var(--tone-96687f);
 }
 .button {
   display: inline-flex;
@@ -132,7 +132,7 @@ h2 em {
   color: var(--color-black);
 }
 .primary:hover {
-  background: #e8daf5;
+  background: var(--tone-e8daf5);
 }
 .outline {
   background: transparent;
@@ -148,7 +148,7 @@ h2 em {
   border-radius: 50%;
 }
 .icon-button:hover {
-  background: #a890c51a;
+  background: var(--tone-a890c51a);
 }
 .text-link {
   font-size: 12px;
@@ -177,7 +177,7 @@ h2 em {
   color: var(--color-gray);
 }
 .empty-state {
-  border: 1px dashed #cbbec7;
+  border: 1px dashed var(--tone-cbbec7);
   text-align: center;
   padding: 45px 25px;
   border-radius: 12px;
@@ -188,7 +188,7 @@ h2 em {
   font-family: var(--font-title);
   display: block;
   font-size: 35px;
-  color: #9b789b;
+  color: var(--tone-9b789b);
   margin-bottom: 10px;
 }
 .empty-state h3 {
@@ -197,7 +197,7 @@ h2 em {
   margin-bottom: 10px;
 }
 .empty-state p {
-  color: #77717c;
+  color: var(--color-gray);
   font-size: 13px;
   max-width: 460px;
   margin: auto;
@@ -208,26 +208,14 @@ h2 em {
 }
 .notice {
   font-size: 12px;
-  color: #75636b;
-  background: #eee2e7;
+  color: var(--tone-75636b);
+  background: var(--tone-eee2e7);
   padding: 12px 16px;
   border-radius: 5px;
   margin-bottom: 24px;
 }
 .error {
-  color: #b93158 !important;
-}
-.toast {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-black);
-  color: white;
-  padding: 15px 25px;
-  border-radius: 8px;
-  z-index: 200;
-  max-width: 90vw;
+  color: var(--tone-b93158) !important;
 }
 .form-help {
   font-size: 10px;
@@ -246,9 +234,9 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid #d7cdc9;
+  border: 1px solid var(--tone-d7cdc9);
   border-radius: 5px;
-  background: #ffffff70;
+  background: var(--tone-ffffff70);
   padding: 11px 13px;
   color: var(--color-black);
   font-size: 13px;
@@ -263,7 +251,7 @@ textarea {
   display: contents;
 }
 dialog::backdrop {
-  background: #17151ce8;
+  background: var(--tone-17151ce8);
 }
 #planner-status,
 #export-status {
@@ -281,3 +269,10 @@ dialog::backdrop {
   padding: 0;
   overflow: hidden;
 }
+
+/* Allow grid and flex children to shrink around long API content. */
+main, section, article, .form-grid > *, .step-content, .event > div, .memory > div { min-width: 0; }
+p, h3, h4, figcaption, .confirmed-address { overflow-wrap: anywhere; }
+input, select, textarea { min-width: 0; }
+
+h1, h2 { overflow-wrap: anywhere; }

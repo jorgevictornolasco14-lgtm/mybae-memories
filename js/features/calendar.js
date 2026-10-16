@@ -1,4 +1,4 @@
-import { api } from "./api.js";
+import { api } from "../api.js";
 import {
   $,
   escapeHTML as e,
@@ -6,7 +6,7 @@ import {
   todayKey,
   formatDate,
   mapsURL,
-} from "./ui.js";
+} from "../components/ui.js";
 export function initCalendar(onItinerary) {
   const current = todayKey();
   let [year, month] = current.split("-").map(Number);
@@ -31,7 +31,7 @@ export function initCalendar(onItinerary) {
         ),
       );
     $("#event-list").innerHTML = loadError
-      ? emptyState("Tempo para o nosso próximo capítulo.", loadError)
+      ? emptyState("Tempo para o nosso próximo capítulo.", loadError, true)
       : rows.length
         ? rows
             .map(
@@ -61,16 +61,18 @@ export function initCalendar(onItinerary) {
           }
         }),
       );
+    $("#event-list .retry")?.addEventListener("click", load);
     draw();
+    if (day) $("#calendar-days").querySelector(`[data-date="${day}"]`)?.focus({ preventScroll: true });
   }
   function draw() {
     $("#calendar-month").textContent = new Intl.DateTimeFormat("pt-BR", {
       month: "long",
       year: "numeric",
       timeZone: "America/Sao_Paulo",
-    }).format(new Date(year, month, 15, 12));
-    const first = new Date(year, month, 1).getDay(),
-      count = new Date(year, month + 1, 0).getDate();
+    }).format(new Date(Date.UTC(year, month, 15, 15)));
+    const first = new Date(Date.UTC(year, month, 1)).getUTCDay(),
+      count = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
     $("#calendar-days").innerHTML =
       "<span></span>".repeat(first) +
       Array.from({ length: count }, (_, i) => {
@@ -100,15 +102,16 @@ export function initCalendar(onItinerary) {
   $("#next-month").addEventListener("click", () => move(1));
   $("#show-upcoming").addEventListener("click", () => showEvents());
   draw();
-  return api("encontros")
-    .then((data) => {
-      events = data;
-    })
-    .catch((error) => {
-      loadError =
-        error.status === 503
-          ? "A agenda ainda está sendo preparada. Nenhum encontro foi publicado."
-          : error.message;
-    })
-    .finally(() => showEvents());
+  async function load() {
+    loadError = "";
+    $("#event-list").setAttribute("aria-busy", "true");
+    $("#event-list").innerHTML = '<p class="loading">Preparando nossa agenda…</p>';
+    try { events = await api("encontros"); }
+    catch (error) { loadError = error.message; }
+    finally {
+      $("#event-list").setAttribute("aria-busy", "false");
+      showEvents(selected);
+    }
+  }
+  return load();
 }

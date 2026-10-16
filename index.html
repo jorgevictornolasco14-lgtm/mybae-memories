@@ -8,17 +8,22 @@
       name="description"
       content="My Bae — o pequeno universo de Jorge e Antonia. Memórias, fotografias e novos lugares para descobrir juntos."
     />
+    <meta property="og:title" content="My Bae — Jorge &amp; Antonia" />
+    <meta property="og:description" content="Nosso pequeno universo. Memórias, fotografias e novos lugares para descobrir juntos." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
     <title>My Bae — Jorge & Antonia</title>
     <link rel="icon" href="/assets/icons/heart.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/fonts.css" />
     <link rel="stylesheet" href="/css/variables.css" />
     <link rel="stylesheet" href="/css/global.css" />
     <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/animations.css" />
     <link rel="stylesheet" href="/css/responsive.css" />
-    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
-    <script src="/vendor/leaflet/leaflet.js" defer></script>
-    <script src="/vendor/html-to-image.js" defer></script>
-    <script src="/vendor/jspdf.js" defer></script>
+    <link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css" />
+    <script src="/assets/vendor/leaflet/leaflet.js" defer></script>
+    <script src="/assets/vendor/html-to-image.js" defer></script>
+    <script src="/assets/vendor/jspdf.js" defer></script>
     <script type="module" src="/js/main.js"></script>
   </head>
   <body>
@@ -156,7 +161,7 @@
         <div class="calendar-layout">
           <div class="calendar">
             <div class="calendar-top">
-              <h3 id="calendar-month"></h3>
+              <h3 id="calendar-month" aria-live="polite"></h3>
               <div>
                 <button
                   id="prev-month"
@@ -185,7 +190,7 @@
           <div class="upcoming">
             <p class="eyebrow">NA NOSSA AGENDA</p>
             <h3 id="selected-day">Próximos encontros</h3>
-            <div id="event-list" aria-live="polite"></div>
+            <div id="event-list" aria-live="polite"><p class="loading">Preparando nossa agenda…</p></div>
             <button id="show-upcoming" class="text-link">
               Ver próximos encontros ↗
             </button>
@@ -344,9 +349,8 @@
     <footer>
       <a class="brand" href="#inicio">my bae<span>♡</span></a>
       <p>Nosso pequeno universo. Uma memória de cada vez.</p>
-      <a href="/admin">Administração ↗</a>
     </footer>
-    <dialog id="lightbox" class="lightbox">
+    <dialog id="lightbox" class="lightbox" aria-label="Fotografias do álbum" aria-describedby="lightbox-caption">
       <button
         id="lightbox-close"
         class="icon-button"
@@ -372,6 +376,5 @@
         →
       </button>
     </dialog>
-    <div id="toast" role="status" class="toast" hidden></div>
   </body>
 </html>

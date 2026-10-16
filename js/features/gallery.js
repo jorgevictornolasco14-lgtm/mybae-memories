@@ -1,4 +1,4 @@
-import { api } from "./api.js";
+import { api } from "../api.js";
 import {
   $,
   escapeHTML as e,
@@ -6,7 +6,7 @@ import {
   formatDate,
   loadSection,
   safeImage,
-} from "./ui.js";
+} from "../components/ui.js";
 export async function initGallery() {
   let photos = [],
     index = 0;
@@ -30,20 +30,20 @@ export async function initGallery() {
     const sort = $("#gallery-sort").value;
     photos.sort((a, b) =>
       sort === "caption"
-        ? a.legenda.localeCompare(b.legenda, "pt-BR")
+        ? String(a.legenda || "").localeCompare(String(b.legenda || ""), "pt-BR")
         : sort === "oldest"
-          ? (a.data_foto || a.created_at).localeCompare(
-              b.data_foto || b.created_at,
+          ? (a.data_foto || a.created_at || "").localeCompare(
+              b.data_foto || b.created_at || "",
             )
-          : (b.data_foto || b.created_at).localeCompare(
-              a.data_foto || a.created_at,
+          : (b.data_foto || b.created_at || "").localeCompare(
+              a.data_foto || a.created_at || "",
             ),
     );
     $("#gallery-grid").innerHTML = photos.length
       ? photos
           .map(
             (row, i) =>
-              `<button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(safeImage(row.imagem_url))}" alt="${e(row.descricao || row.legenda)}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button>`,
+              `<button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(safeImage(row.imagem_url))}" alt="${e(row.descricao || row.legenda || "Fotografia do álbum")}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button>`,
           )
           .join("")
       : emptyState(
@@ -73,7 +73,7 @@ export async function initGallery() {
     $("#gallery-grid"),
     () => api("galeria"),
     (data) => {
-      photos = data;
+      photos = data.filter((row) => safeImage(row.imagem_url));
       render();
     },
     "Um álbum esperando por nós.",
