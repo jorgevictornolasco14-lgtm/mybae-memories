@@ -1,6 +1,6 @@
 # My Bae
 
-O pequeno universo de Jorge e Antonia: história, fotografias, encontros e planejamento de passeios. Frontend estático, sem login, reaproveitado do projeto original. A administração acontece fora deste site.
+O pequeno universo de Jorge e Maria: história, fotografias, encontros e planejamento de passeios. Frontend estático, sem login, reaproveitado do projeto original. A administração acontece fora deste site.
 
 ## Tecnologias e organização
 

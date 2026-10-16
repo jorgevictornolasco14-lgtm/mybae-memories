@@ -1,5 +1,5 @@
 // Configuração pública em memória, compartilhada com os roteiros renderizados depois.
-const branding = { nome_site: "My Bae", nome_pessoa_1: "Jorge", nome_pessoa_2: "Antonia" };
+const branding = { nome_site: "My Bae", nome_pessoa_1: "Jorge", nome_pessoa_2: "Maria" };
 export function applyBranding(settings = {}) {
   for (const key of Object.keys(branding)) {
     if (typeof settings[key] === "string" && settings[key].trim()) branding[key] = settings[key].trim();

@@ -168,13 +168,13 @@ class FrontendTests(unittest.TestCase):
         self.open()
         expect(self.page.locator('#config-status')).to_contain_text('formato inesperado')
         expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'false')
-        expect(self.page).to_have_title('My Bae — Jorge & Antonia')
+        expect(self.page).to_have_title('My Bae — Jorge & Maria')
         self.responses['configuracoes'] = [{'nome_site': 123}]
         self.page.locator('#config-status .retry').click()
         expect(self.page.locator('#config-status')).to_contain_text('incompletos ou inválidos')
         self.responses['configuracoes'] = [{'nome_site': 'Conectado', 'nome_pessoa_1': None}]
         self.page.locator('#config-status .retry').click()
-        expect(self.page).to_have_title('Conectado — Jorge & Antonia')
+        expect(self.page).to_have_title('Conectado — Jorge & Maria')
         expect(self.page.locator('#config-status')).to_be_empty()
 
     def test_settings_loading_and_http_failure(self):
@@ -195,7 +195,7 @@ class FrontendTests(unittest.TestCase):
         pending[0].fulfill(content_type='application/json', body='[]')
         expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'false')
         expect(self.page.locator('#config-status')).to_contain_text('primeiros detalhes')
-        expect(self.page).to_have_title('My Bae — Jorge & Antonia')
+        expect(self.page).to_have_title('My Bae — Jorge & Maria')
 
     def test_disconnected_backend(self):
         self.page.unroute('**/js/config.js')
