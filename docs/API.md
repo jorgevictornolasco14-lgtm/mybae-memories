@@ -26,6 +26,12 @@ A interface envia `POST /api/galeria` como `multipart/form-data`, com `file`, `l
 
 O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. GET e OPTIONS da origem publicada passaram; uma publicação real ainda depende de o endpoint aceitar o multipart descrito acima. O backend e seu deploy não foram alterados neste repositório.
 
+## Exclusão administrativa
+
+Verificação HTTP em 16/10/2026 às 03:37 UTC, com `Origin: https://mybae-memories.vercel.app`: o preflight `OPTIONS` solicitando `DELETE` em `/api/galeria` e `/api/memorias` respondeu HTTP 405, com `Allow: GET, POST`. As rotas por registro `/api/galeria/{id}` e `/api/memorias/{id}` responderam 404 da Vercel. `/api/admin/session` e `/api/admin` também responderam 404. Portanto, o backend publicado não confirma endpoints DELETE nem uma sessão administrativa temporária; este frontend não deve exibir controles de exclusão nem tentar contornar essa ausência.
+
+Para habilitar a funcionalidade com segurança, o backend precisa publicar e documentar uma forma de autorização administrativa temporária, sem segredo permanente no JavaScript, e endpoints DELETE específicos para cada registro. Deve validar a autorização no servidor, responder ao preflight CORS para os métodos e cabeçalhos necessários e retornar sucesso/erros previsíveis. Depois disso, o frontend pode integrar o contrato, apresentar confirmação e remover o card somente após confirmação HTTP do servidor.
+
 Reproduzir a verificação HTTP:
 
 ```powershell
