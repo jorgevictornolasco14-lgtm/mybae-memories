@@ -16,7 +16,7 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 
 ## Cadastro de memórias
 
-Verificação em 16/10/2026: `GET /api/memorias` respondeu HTTP 200 com `[]`. O preflight para `POST /api/memorias` respondeu HTTP 405 e `Allow: GET`; portanto, o backend observado ainda não oferece gravação de memórias e não há contrato POST real que o frontend possa confirmar. A interface usa provisoriamente os campos públicos do GET (`titulo`, `data_memoria`, `descricao`) e exige HTTP 201 para mostrar sucesso. Com o endpoint atual, a interface informa que nada foi salvo; habilitar o POST e validar esse payload exige alteração no repositório do backend, que não foi feita aqui.
+Verificação em 16/10/2026: `GET /api/memorias` respondeu HTTP 200 com `[]`. O preflight para `POST /api/memorias` inicialmente retornou 405; às 02:51 UTC respondeu 204 e autorizou POST. Um POST de `{}` retornou HTTP 400 com a validação `Confira os campos: titulo, descricao, data_memoria`, confirmando os nomes do payload sem criar registro. O frontend envia esses três campos e exige HTTP 201 para mostrar sucesso. Nenhum registro de teste foi publicado; o GET seguinte continuou retornando `[]`.
 
 ## CORS e upload da galeria
 
