@@ -30,7 +30,7 @@
 <body>
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
   <header class="site-header">
-    <a class="brand" href="#inicio" aria-label="My Bae, início">my bae<span>♡</span><small>JORGE & ANTONIA</small></a>
+    <a class="brand" href="#inicio" aria-label="My Bae, início"><span data-site-name>my bae</span><span>♡</span><small data-couple-names>JORGE & ANTONIA</small></a>
     <button class="menu-toggle icon-button" aria-label="Abrir menu" aria-expanded="false" aria-controls="navigation">
       ☰
     </button>
@@ -41,7 +41,7 @@
   </header>
   <main id="conteudo">
     <section id="inicio" class="hero">
-      <div class="hero-copy">
+      <div class="hero-copy" id="site-config" aria-busy="true">
         <p class="eyebrow">
           <span class="tiny-star">✧</span> UM LUGAR SÓ NOSSO
         </p>
@@ -51,7 +51,8 @@
         <p class="hero-message" id="hero-message">
           Nosso pequeno universo, feito de grandes momentos.
         </p>
-        <p class="couple" id="couple-names">Jorge <span>&</span> Antonia</p>
+        <p class="couple" id="couple-names"><span data-person="1">Jorge</span> <span>&</span> <span data-person="2">Antonia</span></p>
+        <div id="config-status" class="config-status" role="status"><span>Carregando nosso universo…</span></div>
         <a class="button primary" href="#historia">Explorar nossa história <span>↗</span></a>
         <div id="together" class="together" hidden></div>
       </div>
@@ -257,11 +258,11 @@
       <span aria-hidden="true">♡</span>
       <p>De todos os lugares do mundo,</p>
       <h2>meu favorito é <em>com você.</em></h2>
-      <span class="eyebrow">JORGE & ANTONIA · MY BAE</span>
+      <span class="eyebrow"><span data-couple-names>JORGE & ANTONIA</span> · <span data-site-name>MY BAE</span></span>
     </section>
   </main>
   <footer>
-    <a class="brand" href="#inicio">my bae<span>♡</span></a>
+    <a class="brand" href="#inicio"><span data-site-name>my bae</span><span>♡</span></a>
     <p>Nosso pequeno universo. Uma memória de cada vez.</p>
   </footer>
   <dialog id="lightbox" class="lightbox" aria-label="Fotografias do álbum" aria-describedby="lightbox-caption">

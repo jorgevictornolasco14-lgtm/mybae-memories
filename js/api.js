@@ -19,7 +19,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body } = {}) {
     const timeout = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
     try {
       const response = await fetch(url, {
-        method, credentials: "omit",
+        method, mode: "cors", credentials: "omit",
         headers: { Accept: "application/json", ...(body !== undefined ? { "Content-Type": "application/json" } : {}) },
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}), signal: controller.signal,
       });
@@ -35,7 +35,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body } = {}) {
       return validateResponse(name, data);
     } catch (error) {
       if (controller.signal.aborted) throw new Error("O serviço demorou para responder. Tente novamente.");
-      if (error instanceof TypeError) throw new Error("Não foi possível conectar ao serviço. Confira sua conexão e tente novamente.");
+      if (error instanceof TypeError) throw new Error("Não foi possível conectar ao serviço. Confira sua conexão; se persistir, a origem do site precisa ser autorizada no backend (CORS).");
       throw error;
     } finally { clearTimeout(timeout); }
   })();

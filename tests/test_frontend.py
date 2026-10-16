@@ -3,6 +3,7 @@ import base64
 import functools
 import json
 import os
+import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import threading
@@ -40,7 +41,7 @@ class FrontendTests(unittest.TestCase):
         self.requests = []
         self.responses = {'galeria': [], 'memorias': [], 'encontros': [], 'roteiros': [], 'configuracoes': []}
         self.page.route('**/api/*', self.mock_api)
-        self.page.route('**/js/config.js', lambda route: route.fulfill(content_type='application/javascript', body=(ROOT/'js/config.js').read_text(encoding='utf-8').replace('API_BASE_URL: ""', f'API_BASE_URL: "{self.origin}"')))
+        self.page.route('**/js/config.js', lambda route: route.fulfill(content_type='application/javascript', body=re.sub(r'API_BASE_URL: "[^"\n]*"', f'API_BASE_URL: "{self.origin}"', (ROOT/'js/config.js').read_text(encoding='utf-8'))))
         # Map tiles are mocked to avoid requests to a public tile service in tests.
         self.page.route('**/*.tile.openstreetmap.org/**', lambda route: route.fulfill(content_type='image/png', body=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')))
 
@@ -82,8 +83,67 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(self.page.locator('input[type=password]').count(), 0)
         self.assertTrue(all('admin' not in name for name, _ in self.requests))
 
+    def test_settings_array_updates_all_branding_and_rerenders(self):
+        self.responses['configuracoes'] = [{
+            'nome_site': 'Nosso Universo', 'nome_pessoa_1': 'Pessoa A',
+            'nome_pessoa_2': 'Pessoa B', 'mensagem_principal': '<b>Uma mensagem nossa</b>',
+            'data_inicio_relacionamento': '2020-01-01', 'imagem_capa': ''
+        }, {'nome_site': 'Nao usar'}]
+        self.open()
+        expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'false')
+        expect(self.page).to_have_title('Nosso Universo — Pessoa A & Pessoa B')
+        expect(self.page.locator('#hero-message')).to_have_text('<b>Uma mensagem nossa</b>')
+        self.assertEqual(self.page.locator('#hero-message b').count(), 0)
+        expect(self.page.locator('#couple-names')).to_have_text('Pessoa A & Pessoa B')
+        for node in self.page.locator('[data-site-name]').all():
+            expect(node).to_have_text('Nosso Universo')
+        for node in self.page.locator('[data-couple-names]').all():
+            expect(node).to_have_text('Pessoa A & Pessoa B')
+        expect(self.page.locator('#together')).to_be_visible()
+        expect(self.page.locator('#config-status')).to_be_empty()
+        self.responses['ai'] = self.itinerary()
+        self.fill_planner()
+        self.page.locator('#planner-form button[type=submit]').click()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Passeio de teste')
+        expect(self.page.locator('.itinerary-title [data-site-name]')).to_have_text('Nosso Universo')
+
+    def test_settings_error_invalid_contract_and_retry(self):
+        self.responses['configuracoes'] = {'nome_site': 'Objeto invalido'}
+        self.open()
+        expect(self.page.locator('#config-status')).to_contain_text('formato inesperado')
+        expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'false')
+        expect(self.page).to_have_title('My Bae — Jorge & Antonia')
+        self.responses['configuracoes'] = [{'nome_site': 123}]
+        self.page.locator('#config-status .retry').click()
+        expect(self.page.locator('#config-status')).to_contain_text('incompletos ou inválidos')
+        self.responses['configuracoes'] = [{'nome_site': 'Conectado', 'nome_pessoa_1': None}]
+        self.page.locator('#config-status .retry').click()
+        expect(self.page).to_have_title('Conectado — Jorge & Antonia')
+        expect(self.page.locator('#config-status')).to_be_empty()
+
+    def test_settings_loading_and_http_failure(self):
+        self.page.route('**/api/configuracoes', lambda route: route.fulfill(
+            status=503, content_type='application/json', body='{}'))
+        self.open()
+        expect(self.page.locator('#config-status')).to_contain_text('temporariamente indisponível')
+        expect(self.page.locator('#config-status .retry')).to_be_visible()
+        self.assertTrue(self.page.locator('.hero-art').is_visible())
+
+    def test_settings_loading_and_empty_array(self):
+        pending = []
+        self.page.route('**/api/configuracoes', lambda route: pending.append(route))
+        self.page.goto(self.origin, wait_until='domcontentloaded')
+        expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'true')
+        expect(self.page.locator('#config-status')).to_contain_text('Carregando')
+        self.assertEqual(len(pending), 1)
+        pending[0].fulfill(content_type='application/json', body='[]')
+        expect(self.page.locator('#site-config')).to_have_attribute('aria-busy', 'false')
+        expect(self.page.locator('#config-status')).to_contain_text('primeiros detalhes')
+        expect(self.page).to_have_title('My Bae — Jorge & Antonia')
+
     def test_disconnected_backend(self):
         self.page.unroute('**/js/config.js')
+        self.page.route('**/js/config.js', lambda route: route.fulfill(content_type='application/javascript', body=re.sub(r'API_BASE_URL: "[^"\n]*"', 'API_BASE_URL: ""', (ROOT/'js/config.js').read_text(encoding='utf-8'))))
         self.open()
         expect(self.page.locator('#gallery-grid')).to_contain_text('Quando o álbum estiver conectado')
         self.assertEqual(self.requests, [])

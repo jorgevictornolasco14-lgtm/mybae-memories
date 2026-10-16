@@ -32,7 +32,9 @@ export function validateResponse(path, data) {
     if (path === "galeria") return text(row.imagem_url) && (!row.data_foto || isDate(row.data_foto));
     if (path === "encontros") return row.id != null && text(row.titulo) && isDate(row.data_encontro) && time(row.horario_inicio);
     if (path === "roteiros") { validateItinerary(row.dados_json); return text(row.titulo); }
-    if (path === "configuracoes") return !row.data_inicio_relacionamento || isDate(row.data_inicio_relacionamento);
+    if (path === "configuracoes") return ["nome_site", "nome_pessoa_1", "nome_pessoa_2", "mensagem_principal", "imagem_capa"]
+      .every((key) => row[key] == null || typeof row[key] === "string") &&
+      (!row.data_inicio_relacionamento || isDate(row.data_inicio_relacionamento));
     if (path === "mapas") return text(row.nome) && Number.isFinite(row.latitude) && Math.abs(row.latitude) <= 90 &&
       Number.isFinite(row.longitude) && Math.abs(row.longitude) <= 180;
     return false;

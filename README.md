@@ -36,9 +36,11 @@ Abra http://127.0.0.1:8080. Use HTTP local; abrir o HTML por `file://` impede o 
 
 ## Conectar o backend
 
-Edite `js/config.js` e preencha `CONFIG.API_BASE_URL` com a URL pública real, sem `/api` no final. Ela começa vazia de propósito: nenhuma URL foi presumida e nenhuma chamada é enviada até haver configuração. Os estados vazios e mensagens de indisponibilidade continuam utilizáveis.
+`js/config.js` centraliza `CONFIG.API_BASE_URL`, já configurada como `https://mybae-backend-seven.vercel.app`, sem `/api` no final. `js/api.js` usa Fetch com CORS, sem cookies ou tokens. Ao abrir a página, `GET /api/configuracoes` é validado como array JSON; seu primeiro registro atualiza nome do site, nomes do casal e mensagem principal, preservando o conteúdo padrão para campos vazios. A interface informa carregamento, ausência de registros e falhas, com botão para tentar novamente. As animações e demais funcionalidades inicializam independentemente dessa leitura.
 
-As rotas preservadas do frontend são `GET /api/memorias`, `/api/galeria`, `/api/encontros`, `/api/configuracoes`, `/api/roteiros` e `POST /api/ai`, `/api/mapas`. O backend privado não foi acessado: esses contratos refletem os consumidores originais, não uma integração confirmada. Confira os [contratos e pendências](docs/API.md) antes de conectar.
+Em 15/10/2026, a consulta real de configurações sem `Origin` retornou 200 com os campos esperados. Galeria, memórias, encontros e roteiros retornaram arrays vazios; suas chamadas existentes foram preservadas, pois ainda não foi possível confirmar os campos dos registros. Os POSTs de IA/mapas permanecem sem nova validação em produção. Confira os [contratos e evidências](docs/API.md).
+
+**Pendência no backend:** GET e OPTIONS rejeitam a origem publicada `https://mybae-memories.vercel.app` com HTTP 403 (`Origem não autorizada.`). As origens locais na porta 8080 também são rejeitadas. O teste real no navegador confirmou o bloqueio. A lista CORS do backend precisa autorizar essas origens antes de concluir a integração ponta a ponta. Alterações neste frontend não removem essa restrição do servidor.
 
 O backend separado precisa permitir a origem do frontend via CORS, incluindo `OPTIONS`, `GET`, `POST`, `Accept` e `Content-Type`. O cliente omite cookies e não envia credenciais. As requisições possuem timeout de 55 segundos; chamadas simultâneas idênticas compartilham a mesma promessa. Não há cache persistente dos dados nem envio privilegiado de conteúdo.
 

@@ -15,7 +15,7 @@ export function initMemories() {
           .join("")
         : emptyState(
           "Toda história começa com um instante.",
-          "As memórias publicadas de Jorge e Antonia terão seu lugar aqui.",
+          "As nossas memórias publicadas terão seu lugar aqui.",
         );
     },
     "Nosso livro ainda está sendo escrito.",
