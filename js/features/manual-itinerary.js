@@ -8,6 +8,76 @@ const MAX_PUBLISHED_STEPS = 9;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+export function buildManualItineraryPayload(itinerary) {
+  if (itinerary.etapas.length < 2) throw new Error("Adicione pelo menos duas etapas para guardar o encontro.");
+  if (itinerary.etapas.length > MAX_PUBLISHED_STEPS)
+    throw new Error(`O backend permite publicar até ${MAX_PUBLISHED_STEPS} etapas por encontro. Remova algumas etapas antes de guardar.`);
+  itinerary.etapas.forEach((stage, index) => {
+    if (stage.horario >= itinerary.fim)
+      throw new Error(`Etapa ${index + 1}: o horário deve ser anterior ao término do encontro (${itinerary.fim}). Horário de término: informe um horário posterior a ${stage.horario}, mantendo o horário real da etapa.`);
+  });
+  const transport = itinerary.transporte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  const transportMap = transport.includes("aplic") || transport.includes("uber") || transport.includes("99") ? "Aplicativo"
+    : transport.includes("transporte") || transport.includes("onibus") || transport.includes("metro") ? "Transporte público"
+      : transport.includes("carro") ? "Carro"
+        : transport === "a pe" || transport.includes("caminh") ? "A pé" : null;
+  if (!transportMap) throw new Error("Informe transporte como A pé, Carro, Transporte público ou Aplicativo.");
+  return {
+    titulo: itinerary.titulo,
+    cidade: itinerary.cidade,
+    data_encontro: itinerary.data,
+    horario_inicio: itinerary.inicio,
+    horario_fim: itinerary.fim,
+    descricao: itinerary.descricao,
+    tipo_passeio: "Personalizado",
+    transporte: transportMap,
+    etapas: itinerary.etapas.map((stage, index) => ({
+      ordem: index + 1,
+      horario: stage.horario,
+      nome: stage.nome,
+      descricao: stage.descricao,
+      endereco: stage.busca,
+    })),
+  };
+}
+
+function submissionErrorMessage(error) {
+  const preciseDetails = error.status === 400 && Array.isArray(error.validationIssues)
+    ? error.validationIssues.filter((issue) => /^(?:titulo|cidade|data_encontro|horario_inicio|horario_fim|descricao|tipo_passeio|transporte|etapas(?:\.[0-8]\.(?:ordem|horario|nome|descricao|endereco|duracao_estimada_minutos))?)$/.test(issue.path) &&
+      typeof issue.message === "string").map((issue) => `${issue.path}: ${issue.message}`) : [];
+  if (preciseDetails.length)
+    return `O servidor não aceitou o encontro. ${preciseDetails.join(" ")} Seus dados continuam no formulário.`;
+  const fields = {
+    titulo: "Nome do encontro: informe um texto de até 150 caracteres.",
+    cidade: "Cidade: informe de 2 a 100 caracteres, sem contar espaços nas pontas.",
+    data_encontro: "Data: informe uma data válida no formato AAAA-MM-DD.",
+    horario_inicio: "Horário de início: use HH:mm.",
+    horario_fim: "Horário de término: use HH:mm e um horário posterior ao início e a todas as etapas.",
+    descricao: "Descrição do encontro: use até 3000 caracteres.",
+    tipo_passeio: "Tipo de passeio: o servidor rejeitou o tipo Personalizado.",
+    transporte: "Transporte: escolha A pé, Carro, Transporte público ou Aplicativo.",
+    etapas: "Etapas: envie de 2 a 9 etapas na ordem dos horários, dentro do intervalo do encontro.",
+  };
+  const stageFields = {
+    ordem: "mantenha a ordem sequencial das etapas.",
+    horario: "use HH:mm, na ordem das etapas, a partir do início e antes do término do encontro.",
+    nome: "informe o nome do local, com até 150 caracteres.",
+    descricao: "informe a descrição, com até 1000 caracteres.",
+    endereco: "confira o endereço (até 400 caracteres; até 300 para compor o roteiro).",
+    busca: "confira o endereço usado na busca (de 2 a 300 caracteres).",
+    endereco_sugerido: "confira o endereço (de 2 a 300 caracteres).",
+  };
+  const details = error.status === 400 && Array.isArray(error.validationFields)
+    ? [...new Set(error.validationFields)].map((path) => {
+      if (Object.hasOwn(fields, path)) return fields[path];
+      const stage = /^etapas\.([0-8])\.(\w+)$/.exec(path);
+      return stage && Object.hasOwn(stageFields, stage[2]) ? `Etapa ${Number(stage[1]) + 1}: ${stageFields[stage[2]]}` : "";
+    }).filter(Boolean) : [];
+  return details.length
+    ? `O servidor não aceitou o encontro. ${details.join(" ")} Seus dados continuam no formulário.`
+    : error.message || "Não foi possível salvar. Seus dados continuam no formulário.";
+}
+
 export function initManualItinerary(setItinerary) {
   const dialog = $("#manual-itinerary-dialog");
   const form = $("#manual-itinerary-form");
@@ -125,7 +195,7 @@ export function initManualItinerary(setItinerary) {
       ["cidade", "manual_cidade"], ["horario_inicio", "manual_inicio"], ["horario_fim", "manual_fim"], ["transporte", "manual_transporte"]]
       .map(([key, name]) => [key, form.elements[name].value]));
     data.descricao = form.elements.manual_descricao.value;
-    const itinerarySteps = [...steps.querySelectorAll(".manual-step")].map((row) => {
+    const itinerarySteps = [...steps.querySelectorAll(".manual-step")].map((row, index) => {
       const get = (name) => row.querySelector(`[name="manual_${name}"]`);
       const file = get("fotografia").files[0];
       let imagem_preview_url = "";
@@ -136,25 +206,35 @@ export function initManualItinerary(setItinerary) {
         if (!photoUrls.has(file)) photoUrls.set(file, URL.createObjectURL(file));
         imagem_preview_url = photoUrls.get(file);
       }
-      return {
+      const stage = {
         horario: get("horario").value,
         nome: get("nome").value.trim(),
         descricao: get("etapa_descricao").value.trim(),
         busca: get("endereco").value.trim(),
         ...(imagem_preview_url ? { imagem_url: imagem_preview_url } : {}),
       };
+      const number = index + 1;
+      if (stage.nome.length < 2) throw new Error(`Etapa ${number}: informe o nome do local com pelo menos 2 caracteres.`);
+      if (!stage.descricao) throw new Error(`Etapa ${number}: preencha a descrição.`);
+      if (stage.busca.length < 4) throw new Error(`Etapa ${number}: informe o endereço com pelo menos 4 caracteres.`);
+      return stage;
     });
     if (!isDate(data.data_encontro) || data.data_encontro < todayKey()) {
       throw new Error("Escolha uma data válida, a partir de hoje.");
     }
+    if (data.titulo.trim().length < 2) throw new Error("Nome do encontro: informe pelo menos 2 caracteres.");
+    if (data.cidade.trim().length < 2) throw new Error("Cidade: informe pelo menos 2 caracteres, sem contar espaços nas pontas.");
+    if (!data.descricao.trim()) throw new Error("Descrição do encontro: preencha o texto.");
     if (!itinerarySteps.length || itinerarySteps.length > MAX_STEPS) {
       throw new Error(`Adicione de 1 a ${MAX_STEPS} etapas para visualizar o roteiro.`);
     }
-    if (data.horario_fim <= data.horario_inicio || itinerarySteps.some((step, index) =>
-      step.horario < data.horario_inicio || step.horario > data.horario_fim ||
-      (index > 0 && step.horario < itinerarySteps[index - 1].horario))) {
-      throw new Error("Confira o horário de término e a ordem dos horários das etapas.");
-    }
+    if (data.horario_fim <= data.horario_inicio)
+      throw new Error("Horário de término: escolha um horário posterior ao início do encontro.");
+    itinerarySteps.forEach((step, index) => {
+      if (step.horario < data.horario_inicio || step.horario > data.horario_fim ||
+          (index > 0 && step.horario < itinerarySteps[index - 1].horario))
+        throw new Error(`Etapa ${index + 1}: confira o horário, a ordem das etapas e o intervalo do encontro.`);
+    });
     return validateItinerary({
       titulo: data.titulo.trim(),
       cidade: data.cidade.trim(),
@@ -237,7 +317,7 @@ export function initManualItinerary(setItinerary) {
     saveButton.textContent = "Guardar nosso encontro ♡";
     status.classList.remove("error");
     const recovered = `${imported.steps.length} ${imported.steps.length === 1 ? "etapa recuperada" : "etapas recuperadas"}`;
-    const estimatedEnd = imported.endTimeEstimated ? ` Hor\u00e1rio final estimado pela etapa final: ${imported.manual_fim}.` : "";
+    const estimatedEnd = imported.endTimeEstimated ? ` Hor\u00e1rio final estimado pela etapa final: ${imported.manual_fim}. Antes de guardar, informe no campo Horário de término um horário posterior a ${imported.manual_fim}, sem mudar as etapas.` : "";
     const photoMessage = imported.photoFilesNeedReselection
       ? " As fotografias precisam ser selecionadas novamente."
       : " Se quiser incluir fotografias, selecione os arquivos novamente.";
@@ -264,45 +344,16 @@ export function initManualItinerary(setItinerary) {
     if (saving || saved) return;
     status.textContent = "";
     status.classList.remove("error");
-    let itinerary;
+    let itinerary, payload;
     try {
       itinerary = buildItinerary();
       if (!itinerary) return;
-      if (itinerary.etapas.length < 2) throw new Error("Adicione pelo menos duas etapas para guardar o encontro.");
-      if (itinerary.etapas.length > MAX_PUBLISHED_STEPS)
-        throw new Error(`O backend permite publicar até ${MAX_PUBLISHED_STEPS} etapas por encontro. Remova algumas etapas antes de guardar.`);
+      payload = buildManualItineraryPayload(itinerary);
     } catch (error) {
       status.classList.add("error");
       status.textContent = error.message;
       return;
     }
-    const transport = itinerary.transporte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-    const transportMap = transport.includes("aplic") || transport.includes("uber") || transport.includes("99") ? "Aplicativo"
-      : transport.includes("transporte") || transport.includes("onibus") || transport.includes("metro") ? "Transporte público"
-        : transport.includes("carro") ? "Carro"
-          : transport === "a pe" || transport.includes("caminh") ? "A pé" : null;
-    if (!transportMap) {
-      status.classList.add("error");
-      status.textContent = "Informe transporte como A pé, Carro, Transporte público ou Aplicativo.";
-      return;
-    }
-    const payload = {
-      titulo: itinerary.titulo,
-      cidade: itinerary.cidade,
-      data_encontro: itinerary.data,
-      horario_inicio: itinerary.inicio,
-      horario_fim: itinerary.fim,
-      descricao: itinerary.descricao,
-      tipo_passeio: "Personalizado",
-      transporte: transportMap,
-      etapas: itinerary.etapas.map((stage, index) => ({
-        ordem: index + 1,
-        horario: stage.horario,
-        nome: stage.nome,
-        descricao: stage.descricao,
-        endereco: stage.busca,
-      })),
-    };
     const hasPhotos = [...steps.querySelectorAll('[name="manual_fotografia"]')].some((input) => input.files?.length);
     saving = true;
     saveButton.disabled = true;
@@ -333,7 +384,7 @@ export function initManualItinerary(setItinerary) {
       }));
     } catch (error) {
       status.classList.add("error");
-      status.textContent = error.message || "Não foi possível salvar. Seus dados continuam no formulário.";
+      status.textContent = submissionErrorMessage(error);
     } finally {
       saving = false;
       saveButton.removeAttribute("aria-busy");

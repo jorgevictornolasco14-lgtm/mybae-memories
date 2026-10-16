@@ -31,12 +31,23 @@ export function api(name, { method = ENDPOINTS[name]?.method, body, query, heade
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}), signal: controller.signal,
       });
       if (!response.ok) {
-        let code;
-        try { code = (await response.clone().json())?.code; } catch { /* Non-JSON error body. */ }
+        let code, validationFields, validationIssues;
+        try {
+          const failure = await response.clone().json();
+          code = failure?.code;
+          if (name === "manualItineraryCreate" && response.status === 400 && Array.isArray(failure?.issues)) {
+            validationIssues = failure.issues.filter((issue) => issue && typeof issue.path === "string" && typeof issue.message === "string");
+          }
+          // Keep compatibility with servers returning only field paths.
+          if (name === "manualItineraryCreate" && response.status === 400 &&
+              typeof failure?.error === "string" && failure.error.startsWith("Confira os campos: ")) {
+            validationFields = failure.error.slice("Confira os campos: ".length).split(", ");
+          }
+        } catch { /* Non-JSON error body. */ }
         const message = errorMessages?.[response.status] || (response.status === 429 ? "Muitas solicitações. Aguarde um pouco e tente novamente." :
           response.status === 503 ? "O serviço está temporariamente indisponível. Tente novamente em breve." :
             "Não foi possível concluir a solicitação. Tente novamente.");
-        throw Object.assign(new Error(message), { status: response.status, code });
+        throw Object.assign(new Error(message), { status: response.status, code, validationFields, validationIssues });
       }
       if (expectedStatus && response.status !== expectedStatus) {
         throw Object.assign(new Error(`O serviço respondeu HTTP ${response.status}; esta operação só é confirmada com HTTP ${expectedStatus}.`), { status: response.status });

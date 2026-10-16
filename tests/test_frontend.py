@@ -590,6 +590,131 @@ class FrontendTests(unittest.TestCase):
         expect(self.page.locator('#manual-itinerary-status')).to_contain_text('de 1 a 30 etapas')
         self.assertEqual(self.page.locator('#manual-steps .manual-step').count(), 1)
 
+    def test_manual_save_legacy_seven_steps_requires_end_after_last_stage(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document(include_end=False))
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        self.assertTrue(form.evaluate('(form) => form.checkValidity()'))
+        before = form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")')
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Etapa 7: o horário deve ser anterior ao término')
+        self.assertFalse(any(name == 'encontros' and request.method == 'POST' for name, request in self.requests))
+        self.assertEqual(before, form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")'))
+        form.locator('[name=manual_fim]').fill('14:30')
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Encontro salvo e publicado')
+        payload = next(request.post_data_json for name, request in self.requests if name == 'encontros' and request.method == 'POST')
+        self.assertEqual(payload, {
+            'titulo': 'Roteiro restaurado', 'cidade': 'Belo Horizonte', 'data_encontro': '2027-01-15',
+            'horario_inicio': '08:00', 'horario_fim': '14:30',
+            'descricao': 'Um dia especial restaurado do arquivo.',
+            'tipo_passeio': 'Personalizado', 'transporte': 'A pé',
+            'etapas': [{'ordem': i + 1, 'horario': f'{8 + i:02d}:00', 'nome': f'Local {i + 1}',
+                        'descricao': f'Descrição da etapa {i + 1}.', 'endereco': f'Rua de teste {i + 1}, 100'} for i in range(7)],
+        })
+
+    def test_manual_save_1630_requires_later_end_and_preserves_backup_and_steps(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        document = self.manual_import_document(include_end=False)
+        times = ['09:00', '09:30', '10:00', '11:00', '11:45', '15:30', '16:30']
+        names = ['Praça Sete', 'Praça da Liberdade', 'Jardins do Palácio da Liberdade',
+                 'Shopping Cidade', 'Parque Municipal', 'Cinema', 'Sorvete']
+        for field in document['campos']:
+            if field['name'] == 'manual_inicio':
+                field['value'] = '09:00'
+        for key, values in [('manual_horario', times), ('manual_nome', names)]:
+            for field, value in zip([f for f in document['campos'] if f['name'] == key], values):
+                field['value'] = value
+        backup = json.dumps(document, ensure_ascii=False)
+        self.import_manual_file(document)
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        before = form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")')
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Horário de término: informe um horário posterior a 16:30')
+        self.assertFalse(any(name == 'encontros' and r.method == 'POST' for name, r in self.requests))
+        self.assertEqual(before, form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")'))
+        form.locator('[name=manual_fim]').fill('17:00')
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Encontro salvo e publicado')
+        payload = next(r.post_data_json for name, r in self.requests if name == 'encontros' and r.method == 'POST')
+        self.assertEqual(payload['horario_inicio'], '09:00')
+        self.assertEqual(payload['horario_fim'], '17:00')
+        self.assertEqual([stage['horario'] for stage in payload['etapas']], times)
+        self.assertEqual([stage['nome'] for stage in payload['etapas']], names)
+        self.assertEqual([stage['ordem'] for stage in payload['etapas']], list(range(1, 8)))
+        self.assertEqual(backup, json.dumps(document, ensure_ascii=False))
+        self.assertEqual(form.locator('.manual-step').count(), 7)
+        self.assertEqual([form.locator('[name=manual_horario]').nth(i).input_value() for i in range(7)], times)
+
+    def test_manual_save_backend_validation_reasons_preserve_form(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        before = form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")')
+        reason = 'A etapa 7 começa às 16:30 e deve começar antes do término (16:30). Informe um horário final posterior à etapa'
+        self.responses['encontros_create'] = (400, {
+            'error': f'Confira os campos: etapas.6.horario: {reason}',
+            'issues': [{'path': 'etapas.6.horario', 'message': reason}],
+        })
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text(f'etapas.6.horario: {reason}')
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Seus dados continuam no formulário')
+        expect(self.page.locator('#manual-save')).to_be_enabled()
+        self.assertEqual(before, form.evaluate('(form) => [...new FormData(form)].filter(([, v]) => typeof v === "string")'))
+
+    def test_manual_save_backend_validation_paths_preserve_seven_steps_and_photos(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        form.locator('[name=manual_fotografia]').nth(6).set_input_files({
+            'name': 'etapa7.png', 'mimeType': 'image/png',
+            'buffer': base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII='),
+        })
+        before = form.evaluate('(form) => [...new FormData(form)].map(([k,v]) => [k, typeof v === "string" ? v : v.name])')
+        for body, expected in [
+            ({'error': 'Confira os campos: etapas.6.horario: A etapa 7 deve começar antes do término',
+              'issues': [{'path': 'etapas.6.horario', 'message': 'A etapa 7 deve começar antes do término'}]}, 'A etapa 7 deve começar antes do término'),
+            ({'error': 'Confira os campos: etapas.6.horario'}, 'Etapa 7: use HH:mm'),
+            ({'error': 'Confira os campos: cidade, horario_fim'}, 'Cidade: informe de 2 a 100'),
+            ({'error': 'Confira os campos: etapas.2.descricao'}, 'Etapa 3: informe a descrição'),
+            ({'error': 'Confira os campos: <img src=x onerror=alert(1)>'}, 'Confira os campos e horários'),
+            ({'error': 'internal private error'}, 'Confira os campos e horários'),
+        ]:
+            self.responses['encontros_create'] = (400, body)
+            self.page.locator('#manual-save').click()
+            expect(self.page.locator('#manual-itinerary-status')).to_contain_text(expected)
+            expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Seus dados continuam no formulário')
+            expect(self.page.locator('#manual-save')).to_be_enabled()
+            expect(self.page.locator('#manual-itinerary-dialog')).to_be_visible()
+            self.assertEqual(before, form.evaluate('(form) => [...new FormData(form)].map(([k,v]) => [k, typeof v === "string" ? v : v.name])'))
+        self.assertEqual(len([r for name, r in self.requests if name == 'encontros' and r.method == 'POST']), 6)
+        self.assertEqual(self.responses['encontros'], [])
+        self.assertEqual(self.responses['roteiros'], [])
+
+    def test_manual_save_trimmed_city_and_stage_description_are_specific(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        form.locator('[name=manual_cidade]').fill(' B ')
+        self.assertTrue(form.evaluate('(form) => form.checkValidity()'))
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Cidade: informe pelo menos 2 caracteres')
+        form.locator('[name=manual_cidade]').fill('Belo Horizonte')
+        form.locator('[name=manual_etapa_descricao]').nth(6).fill('   ')
+        self.page.locator('#manual-save').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Etapa 7: preencha a descrição')
+        self.assertFalse(any(name == 'encontros' and request.method == 'POST' for name, request in self.requests))
+
     def test_manual_import_cancel_keeps_existing_form_unchanged(self):
         self.open()
         self.page.locator('#manual-itinerary-open').click()

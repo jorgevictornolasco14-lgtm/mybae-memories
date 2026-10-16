@@ -28,7 +28,7 @@ O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. GET e 
 
 ## Cadastro de encontros e roteiros manuais
 
-Verificação HTTP em 16/10/2026 às 03:46 UTC, com `Origin: https://mybae-memories.vercel.app`: `GET /api/encontros` respondeu HTTP 200 com um array vazio. O preflight `OPTIONS` para `POST /api/encontros` respondeu HTTP 405 e `Allow: GET`; não há contrato de gravação confirmado. O frontend manual pode compor e pré-visualizar um roteiro no componente existente, mas não deve afirmar que salvou nem atualizar o calendário até que o backend publique o POST e documente o payload e a resposta de sucesso.
+Verificação HTTP histórica em 16/10/2026 às 03:46 UTC, com `Origin: https://mybae-memories.vercel.app`: `GET /api/encontros` respondeu HTTP 200 com um array vazio; o preflight POST respondeu HTTP 405 e `Allow: GET` naquele momento. A análise posterior do checkout local `mybae-backend` confirmou a implementação de POST e o contrato em `manualItinerarySubmissionSchema`, usado pela rota pública. Sucesso exige HTTP 201 com `{ success: true, encontro, roteiro }`. São aceitas de 2 a 9 etapas, na ordem sequencial, com início de cada etapa estritamente anterior ao término do encontro. Veja o [diagnóstico, payload completo e testes com o Zod real](manual-itinerary-http400.md). Esses testes usam dependências mockadas e não comprovam a versão publicada em produção.
 
 ## Exclusão administrativa
 
