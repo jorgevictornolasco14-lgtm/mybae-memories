@@ -159,6 +159,7 @@
             <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
           </div>
           <div id="calendar-days" class="calendar-days"></div>
+          <p id="calendar-status" class="calendar-status" role="status" aria-live="polite"></p>
           <p class="calendar-legend">
             <span>♡</span> Um momento nosso <b>·</b> Horários de Brasília
           </p>
@@ -175,6 +176,12 @@
         </div>
       </div>
     </section>
+    <dialog id="event-details-dialog" class="event-details-dialog" aria-labelledby="event-dialog-title">
+      <div class="event-details-content">
+        <div class="event-details-heading"><div><p class="eyebrow">UM DIA PARA NÓS</p><h2 id="event-dialog-title">Encontros do dia</h2></div><button id="event-dialog-close" class="icon-button" type="button" aria-label="Fechar detalhes">×</button></div>
+        <div id="event-dialog-list" class="event-dialog-list"></div>
+      </div>
+    </dialog>
     <section id="planejador" class="planner section">
       <div class="planner-intro">
         <p class="eyebrow">04 / MAIS HISTÓRIAS PARA CONTAR</p>
@@ -286,6 +293,30 @@
     <a class="brand" href="#inicio"><span data-site-name>my bae</span><span>♡</span></a>
     <p>Nosso pequeno universo. Uma memória de cada vez.</p>
   </footer>
+  <audio id="background-music" src="/assets/audio/nossa-musica.mp3" preload="metadata" loop></audio>
+  <aside id="music-player" class="music-player" aria-label="Player de música">
+    <button id="music-toggle" class="music-toggle" type="button" aria-label="Abrir player de música" aria-expanded="false">♫</button>
+    <section id="music-panel" class="music-panel" aria-labelledby="music-title" hidden>
+      <div class="music-heading">
+        <div><p class="eyebrow">UM SOM SÓ NOSSO</p><h2 id="music-title">Nossa música</h2></div>
+        <button id="music-close" class="icon-button" type="button" aria-label="Fechar player">×</button>
+      </div>
+      <p class="music-track">Nossa música</p>
+      <p id="music-status" class="music-status" role="status" aria-live="polite"></p>
+      <button id="music-manual-play" class="button primary music-manual-play" type="button" hidden>Tocar nossa música ♡</button>
+      <div class="music-controls">
+        <button id="music-play" class="button primary" type="button" aria-label="Reproduzir música">▶</button>
+        <button id="music-pause" class="button outline" type="button" aria-label="Pausar música" disabled>Ⅱ</button>
+        <button id="music-mute" class="button outline music-mute" type="button" aria-label="Silenciar música">♪</button>
+        <label class="music-volume-label" for="music-volume">Volume</label>
+        <input id="music-volume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume da música" />
+        <label class="music-loop"><input id="music-loop" type="checkbox" checked /> Repetir</label>
+      </div>
+      <label class="music-progress-label" for="music-progress">Progresso</label>
+      <input id="music-progress" class="music-progress" type="range" min="0" max="100" step="0.1" value="0" aria-label="Progresso da música" disabled />
+      <div class="music-time"><time id="music-elapsed">0:00</time><time id="music-duration">0:00</time></div>
+    </section>
+  </aside>
   <dialog id="lightbox" class="lightbox" aria-label="Fotografias do álbum" aria-describedby="lightbox-caption">
     <button id="lightbox-close" class="icon-button" aria-label="Fechar fotografia">
       ×</button><button id="lightbox-prev" class="icon-button" aria-label="Fotografia anterior">

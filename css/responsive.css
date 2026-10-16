@@ -518,6 +518,9 @@
 }
 
 @media (max-width: 480px) {
+  .music-player { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
+  .music-toggle { width: 48px; height: 48px; }
+  .music-panel { bottom: 60px; }
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
   }

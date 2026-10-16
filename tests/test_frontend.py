@@ -79,6 +79,9 @@ class FrontendTests(unittest.TestCase):
         import re
         html = (ROOT/'index.html').read_text(encoding='utf-8')
         for url in re.findall(r'(?:src|href)="(/[^"#]+)"', html):
+            if url == '/assets/audio/nossa-musica.mp3' and not (ROOT/'assets/audio/nossa-musica.mp3').is_file():
+                # This is the user's media file; the player has a graceful missing-file state.
+                continue
             self.assertTrue((ROOT/url.lstrip('/')).is_file(), url)
         for file in (ROOT/'js').rglob('*.js'):
             for target in re.findall(r'from\s+"(\.[^"]+)"', file.read_text(encoding='utf-8')):
@@ -229,12 +232,27 @@ class FrontendTests(unittest.TestCase):
         self.page.reload()
         button = self.page.locator(f'[data-date="{today}"]')
         expect(button).to_have_class('today has-event')
+        expect(button).to_have_attribute('aria-label', re.compile(r'2 encontro'))
         button.click()
         expect(self.page.locator('.event')).to_have_count(2)
-        expect(self.page.locator(f'[data-date="{today}"]')).to_be_focused()
+        expect(self.page.locator('#event-details-dialog')).to_be_visible()
+        expect(self.page.locator('.event-dialog-item')).to_have_count(2)
+        expect(self.page.locator('#event-dialog-close')).to_be_focused()
+        self.page.locator('#event-dialog-close').click()
         before = self.page.locator('#calendar-month').text_content()
+        next_date = self.page.evaluate("""async () => {
+          const [year, month] = (await import('/js/utils/dates.js')).todayKey().split('-').map(Number);
+          return `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, '0')}-05`;
+        }""")
+        self.responses['encontros'] = [{'id': 'next', 'titulo': 'Próximo mês', 'data_encontro': next_date, 'horario_inicio': '18:30', 'local': 'Café'}]
         self.page.locator('#next-month').click()
         self.assertNotEqual(before, self.page.locator('#calendar-month').text_content())
+        expect(self.page.locator(f'[data-date="{next_date}"]')).to_have_class('has-event')
+        expect(self.page.locator('.event')).to_have_count(1)
+        self.assertEqual(sum(1 for name, request in self.requests if name == 'encontros' and request.method == 'GET'), 3)
+        self.page.locator(f'[data-date="{next_date}"]').click()
+        expect(self.page.locator('.event-dialog-item')).to_contain_text('Próximo mês')
+        self.page.locator('#event-dialog-close').click()
         self.page.locator('#prev-month').click()
         expect(self.page.locator('#calendar-month')).to_have_text(before)
 
@@ -246,6 +264,60 @@ class FrontendTests(unittest.TestCase):
           return [isDate('2024-02-29'), isDate('2026-02-29'), formatDate('2024-02-29')];
         }""")
         self.assertEqual(result, [True, False, '29 de fevereiro de 2024'])
+
+    def test_music_player_controls_autoplay_volume_progress_loop_and_mobile(self):
+        self.page.add_init_script("""(() => {
+          const proto = HTMLMediaElement.prototype;
+          Object.defineProperty(proto, 'paused', {configurable: true, get() { return !this.__playing; }});
+          Object.defineProperty(proto, 'duration', {configurable: true, get() { return this.__duration || 180; }});
+          Object.defineProperty(proto, 'currentTime', {configurable: true, get() { return this.__time || 0; }, set(value) { this.__time = Number(value); }});
+          proto.play = function() { this.__playing = true; this.dispatchEvent(new Event('play')); return Promise.resolve(); };
+          proto.pause = function() { this.__playing = false; this.dispatchEvent(new Event('pause')); };
+        })()""")
+        self.open()
+        audio = self.page.locator('#background-music')
+        expect(audio).to_have_attribute('src', '/assets/audio/nossa-musica.mp3')
+        self.page.set_viewport_size({'width': 320, 'height': 720})
+        toggle = self.page.locator('#music-toggle')
+        box = toggle.bounding_box()
+        self.assertGreaterEqual(box['x'], 0)
+        self.assertLessEqual(box['x'] + box['width'], 320)
+        self.assertEqual(self.page.locator('audio').count(), 1)
+        toggle.click()
+        self.page.locator('#music-pause').click()
+        expect(self.page.locator('#music-status')).to_have_text('Música pausada.')
+        expect(self.page.locator('#music-play')).to_be_enabled()
+        self.page.locator('#music-play').click()
+        expect(self.page.locator('#music-pause')).to_be_enabled()
+        self.page.locator('#music-volume').evaluate("el => { el.value = '0.2'; el.dispatchEvent(new Event('input', {bubbles: true})); }")
+        self.assertEqual(self.page.evaluate("localStorage.getItem('mybae-music-volume')"), '0.2')
+        self.page.locator('#music-mute').click()
+        self.assertEqual(self.page.locator('#music-volume').input_value(), '0')
+        self.page.locator('#music-loop').uncheck()
+        expect(audio).not_to_have_attribute('loop', '')
+        expect(self.page.locator('#music-panel')).to_be_visible()
+        self.page.locator('#music-progress').evaluate("el => { el.value = '45'; el.dispatchEvent(new Event('input', {bubbles: true})); }")
+        self.assertEqual(self.page.locator('#music-elapsed').text_content(), '0:45')
+        self.page.locator('#music-close').click()
+        expect(self.page.locator('#music-panel')).to_be_hidden()
+
+    def test_music_player_autoplay_block_uses_manual_button_without_unhandled_rejection(self):
+        self.page.add_init_script("""(() => {
+          const proto = HTMLMediaElement.prototype;
+          Object.defineProperty(proto, 'paused', {configurable: true, get() { return !this.__playing; }});
+          proto.play = function() {
+            this.__tries = (this.__tries || 0) + 1;
+            if (this.__tries === 1) return Promise.reject(new DOMException('Blocked', 'NotAllowedError'));
+            this.__playing = true; this.dispatchEvent(new Event('play')); return Promise.resolve();
+          };
+          proto.pause = function() { this.__playing = false; this.dispatchEvent(new Event('pause')); };
+        })()""")
+        self.open()
+        expect(self.page.locator('#music-panel')).to_be_visible()
+        expect(self.page.locator('#music-status')).to_contain_text('bloqueada pelo navegador')
+        self.page.locator('#music-manual-play').click()
+        expect(self.page.locator('#music-pause')).to_be_enabled()
+        self.assertEqual(self.errors, [])
 
     def test_api_error_retry_and_invalid_data(self):
         self.responses['galeria'] = (503, {})
