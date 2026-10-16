@@ -192,7 +192,7 @@ class FrontendTests(unittest.TestCase):
         self.page.unroute('**/js/config.js')
         self.page.route('**/js/config.js', lambda route: route.fulfill(content_type='application/javascript', body=re.sub(r'API_BASE_URL: "[^"\n]*"', 'API_BASE_URL: ""', (ROOT/'js/config.js').read_text(encoding='utf-8'))))
         self.open()
-        expect(self.page.locator('#gallery-grid')).to_contain_text('Quando o álbum estiver conectado')
+        expect(self.page.locator('#gallery-grid')).to_contain_text('serviço da galeria está indisponível')
         self.assertEqual(self.requests, [])
         expect(self.page.locator('#together')).to_be_hidden()
 
@@ -200,11 +200,11 @@ class FrontendTests(unittest.TestCase):
         self.responses['galeria'] = [
             {'imagem_url': '/assets/images/flowers.jpg', 'legenda': '<script>teste</script>', 'data_foto': '2026-10-01'},
             {'imagem_url': '/assets/images/park.jpg'},
-            {'imagem_url': 'https://project.supabase.co/storage/v1/object/sign/private/photo.jpg?token=private'},
+            {'imagem_url': 'https://project.supabase.co/storage/v1/object/sign/private/photo.jpg?token=private', 'legenda': 'ZZZ'},
         ]
         self.responses['memorias'] = [{'titulo': '<b>Memória</b>', 'data_memoria': '2026-10-01'}]
         self.open()
-        expect(self.page.locator('.photo-card')).to_have_count(2)
+        expect(self.page.locator('.photo-card')).to_have_count(3)
         expect(self.page.locator('.memory')).to_contain_text('<b>Memória</b>')
         self.assertEqual(self.page.locator('.memory b').count(), 0)
         self.page.locator('#gallery-sort').select_option('caption')
@@ -250,6 +250,27 @@ class FrontendTests(unittest.TestCase):
         self.responses['galeria'] = []
         self.page.locator('#gallery-grid .retry').click()
         expect(self.page.locator('#gallery-grid')).to_contain_text('As nossas melhores páginas')
+
+    def test_gallery_accepts_url_sorts_newest_and_refreshes_expired_signed_url(self):
+        self.responses['galeria'] = [
+            {'id': 'old', 'url': '/assets/images/flowers.jpg', 'legenda': 'Mais antiga', 'data_foto': '2026-10-15', 'created_at': '2026-10-15T10:00:00Z'},
+            {'id': 'new', 'url': '/assets/images/park.jpg', 'legenda': 'Mais recente', 'data_foto': '2026-10-15', 'created_at': '2026-10-15T12:00:00Z'},
+        ]
+        self.open()
+        expect(self.page.locator('.photo-card')).to_have_count(2)
+        expect(self.page.locator('.photo-card').first).to_contain_text('Mais recente')
+
+        initial_url = 'https://project.supabase.co/storage/v1/object/sign/fotos/photo.jpg?token=short-lived'
+        renewed_url = 'https://project.supabase.co/storage/v1/object/sign/fotos/photo.jpg?token=renewed'
+        image_bytes = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')
+        self.page.route('https://project.supabase.co/**', lambda route: route.fulfill(status=200, content_type='image/png', body=image_bytes))
+        self.responses['galeria'] = [{'id': 'signed', 'storage_path': 'photo.jpg', 'url': initial_url, 'legenda': 'Assinada', 'data_foto': '2026-10-15'}]
+        self.page.reload()
+        expect(self.page.locator('.photo-card')).to_have_count(1)
+        self.responses['galeria'] = [{'id': 'signed', 'storage_path': 'photo.jpg', 'url': renewed_url, 'legenda': 'Assinada', 'data_foto': '2026-10-15'}]
+        self.page.locator('.photo-card img').evaluate("img => img.dispatchEvent(new Event('error'))")
+        expect(self.page.locator('.photo-card img')).to_have_attribute('src', renewed_url)
+        self.assertEqual(sum(1 for name, request in self.requests if name == 'galeria' and request.method == 'GET'), 3)
 
     def test_planner_validation_success_and_poster(self):
         self.responses['ai'] = self.itinerary()
@@ -356,13 +377,15 @@ class FrontendTests(unittest.TestCase):
             safeImage('javascript:alert(1)'),
             safeImage('https://x.supabase.co/storage/v1/object/authenticated/a.jpg'),
             safeImage('https://x.supabase.co/storage/v1/object/public/a.jpg?token=secret'),
-            safeImage('https://x.supabase.co/storage/v1/object/public/a.jpg')
+            safeImage('https://x.supabase.co/storage/v1/object/public/a.jpg'),
+            safeImage('https://x.supabase.co/storage/v1/object/sign/fotos/a.jpg?token=short-lived')
           ] };
         }""")
         self.assertIn('resposta inválida', result['messages'][0])
         self.assertIn('conectar', result['messages'][1])
         self.assertEqual(result['images'][:3], ['', '', ''])
         self.assertTrue(result['images'][3].startswith('https://x.supabase.co/'))
+        self.assertIn('/storage/v1/object/sign/', result['images'][4])
 
     def test_published_itinerary_link_and_invalid_coordinates(self):
         self.open()

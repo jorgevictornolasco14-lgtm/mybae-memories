@@ -7,7 +7,7 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 | Método | Rota | Resposta esperada |
 | --- | --- | --- |
 | GET | /api/memorias | Array: titulo, data_memoria (`YYYY-MM-DD`); descricao, categoria, destaque e imagem_url opcionais |
-| GET | /api/galeria | Array: imagem_url; legenda, descricao, data_foto (`YYYY-MM-DD`) e created_at opcionais |
+| GET | /api/galeria | Confirmado: array com id, storage_path, legenda, descricao, data_foto, publicado, created_at, updated_at, imagem_url e url |
 | GET | /api/encontros | Array: id, titulo, data_encontro (`YYYY-MM-DD`), horario_inicio (`HH:mm` ou `HH:mm:ss`); horario_fim, cidade, local, endereco, descricao, preferencias, orcamento e status opcionais |
 | GET | /api/configuracoes | Confirmado: array; primeiro registro com nome_site, nome_pessoa_1, nome_pessoa_2, mensagem_principal, imagem_capa e data_inicio_relacionamento opcionais |
 | GET | /api/roteiros | Array: titulo, dados_json (objeto de roteiro); encontro_id opcional |
@@ -16,9 +16,9 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 
 ## CORS e upload da galeria
 
-Verificação HTTP em 15/10/2026 (America/Sao_Paulo): `GET /api/galeria` retornou HTTP 200 com `[]`, inclusive com `Origin: https://mybae-memories.vercel.app`. O preflight OPTIONS para POST nessa origem retornou 204 e autorizou `GET`, `POST` e o header `Content-Type`. A origem de produção está autorizada no momento da verificação. Isso confirma CORS e a rota de leitura, mas não comprova o contrato do POST nem os campos de resposta.
+Verificação HTTP em 15/10/2026 (America/Sao_Paulo): `GET /api/galeria` retornou HTTP 200 com dois registros publicados, inclusive com `Origin: https://mybae-memories.vercel.app`. A resposta é um array JSON direto. Cada registro observado inclui `imagem_url` e `url` como URLs assinadas do Supabase Storage; os tokens observados expiram em aproximadamente cinco minutos. O preflight OPTIONS para POST nessa origem retornou 204 e autorizou `GET`, `POST` e o header `Content-Type`. A origem de produção está autorizada no momento da verificação.
 
-A interface envia `POST /api/galeria` como `multipart/form-data`, com `file`, `legenda`, `descricao` e `data_foto`; o limite local é 2,8 MiB. Esses campos seguem o requisito desta implementação, pois a API não disponibiliza documentação pública do contrato de upload e não foi feito POST real para evitar publicar arquivo de teste. Confirme no backend os nomes, o limite e as regras de publicação automática antes de produção. A resposta 2xx do POST é tratada como confirmação e dispara novo GET sem cache.
+A interface envia `POST /api/galeria` como `multipart/form-data`, com `file`, `legenda`, `descricao` e `data_foto`; o limite local é 2,8 MiB. O POST não foi repetido nesta verificação para evitar publicar arquivo de teste. Após resposta 2xx, o cliente consulta novamente a lista sem cache.
 
 O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. GET e OPTIONS da origem publicada passaram; uma publicação real ainda depende de o endpoint aceitar o multipart descrito acima. O backend e seu deploy não foram alterados neste repositório.
 

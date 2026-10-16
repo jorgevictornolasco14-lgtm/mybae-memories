@@ -29,7 +29,7 @@ export function validateResponse(path, data) {
   if (!Array.isArray(data) || !data.every(object)) throw new Error("O serviço enviou dados em um formato inesperado.");
   const valid = data.every((row) => {
     if (path === "memorias") return text(row.titulo) && isDate(row.data_memoria);
-    if (path === "galeria") return text(row.imagem_url) && (!row.data_foto || isDate(row.data_foto));
+    if (path === "galeria") return text(row.imagem_url || row.url) && (!row.data_foto || isDate(row.data_foto));
     if (path === "encontros") return row.id != null && text(row.titulo) && isDate(row.data_encontro) && time(row.horario_inicio);
     if (path === "roteiros") { validateItinerary(row.dados_json); return text(row.titulo); }
     if (path === "configuracoes") return ["nome_site", "nome_pessoa_1", "nome_pessoa_2", "mensagem_principal", "imagem_capa"]

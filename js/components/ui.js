@@ -45,10 +45,12 @@ export function safeImage(value) {
   if (typeof value !== "string" || !value) return "";
   try {
     const url = new URL(value, window.location.origin);
-    if (url.username || url.password || url.search || url.hash) return "";
-    if (url.origin === window.location.origin && url.pathname.startsWith("/assets/images/")) return url.href;
-    if (url.protocol === "https:" && /^[a-z0-9-]+\.supabase\.co$/.test(url.hostname) &&
-      url.pathname.startsWith("/storage/v1/object/public/")) return url.href;
+    if (url.username || url.password || url.hash) return "";
+    if (url.origin === window.location.origin && url.pathname.startsWith("/assets/images/") && !url.search) return url.href;
+    if (url.protocol === "https:" && /^[a-z0-9-]+\.supabase\.co$/.test(url.hostname)) {
+      if (url.pathname.startsWith("/storage/v1/object/public/") && !url.search) return url.href;
+      if (url.pathname.startsWith("/storage/v1/object/sign/") && url.searchParams.has("token")) return url.href;
+    }
   } catch { }
   return "";
 }
