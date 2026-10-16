@@ -5,10 +5,11 @@ const MAX_STEPS = 30;
 const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const SINGLE_FIELDS = new Set([
   "manual_titulo", "manual_data", "manual_cidade", "manual_inicio",
-  "manual_fim", "manual_transporte", "manual_descricao",
+  "manual_transporte", "manual_descricao",
 ]);
 const STEP_FIELDS = ["manual_horario", "manual_nome", "manual_etapa_descricao", "manual_endereco"];
-const ALLOWED_FIELDS = new Set([...SINGLE_FIELDS, ...STEP_FIELDS, "manual_fotografia"]);
+const OPTIONAL_SINGLE_FIELDS = new Set(["manual_fim"]);
+const ALLOWED_FIELDS = new Set([...SINGLE_FIELDS, ...OPTIONAL_SINGLE_FIELDS, ...STEP_FIELDS, "manual_fotografia"]);
 const LIMITS = {
   manual_titulo: 100, manual_data: 10, manual_cidade: 100, manual_inicio: 5, manual_fim: 5,
   manual_transporte: 60, manual_descricao: 1000, manual_horario: 5, manual_nome: 120,
@@ -40,7 +41,7 @@ export function parseManualItineraryImport(source) {
       throw new Error("O arquivo possui um campo malformado.");
     }
     if (!ALLOWED_FIELDS.has(field.name)) continue;
-    if (SINGLE_FIELDS.has(field.name)) {
+    if (SINGLE_FIELDS.has(field.name) || OPTIONAL_SINGLE_FIELDS.has(field.name)) {
       if (values.has(field.name)) throw new Error(`O campo ${field.name} aparece mais de uma vez.`);
       values.set(field.name, field.value);
     } else {
@@ -53,9 +54,8 @@ export function parseManualItineraryImport(source) {
     if (!values.has(name)) throw new Error(`O arquivo está incompleto: falta ${name}.`);
     result[name] = text(values.get(name), name, { min: name === "manual_descricao" ? 0 : 2 });
   }
-  if (!isDate(result.manual_data) || !TIME.test(result.manual_inicio) || !TIME.test(result.manual_fim) ||
-      result.manual_fim <= result.manual_inicio) {
-    throw new Error("A data ou os horários do roteiro são inválidos.");
+  if (!isDate(result.manual_data) || !TIME.test(result.manual_inicio)) {
+    throw new Error("A data ou o hor\u00e1rio de in\u00edcio do roteiro s\u00e3o inv\u00e1lidos.");
   }
   const count = values.get("manual_nome")?.length ?? 0;
   if (count < 1 || count > MAX_STEPS || STEP_FIELDS.some((name) => values.get(name)?.length !== count)) {
@@ -65,12 +65,19 @@ export function parseManualItineraryImport(source) {
     const step = Object.fromEntries(STEP_FIELDS.map((name) => [name, text(values.get(name)[index], name, {
       min: name === "manual_endereco" ? 4 : name === "manual_etapa_descricao" ? 0 : 2,
     })]));
-    if (!TIME.test(step.manual_horario) || step.manual_horario < result.manual_inicio || step.manual_horario >= result.manual_fim ||
+    if (!TIME.test(step.manual_horario) || step.manual_horario < result.manual_inicio ||
         (index > 0 && step.manual_horario < values.get("manual_horario")[index - 1])) {
       throw new Error(`O horário da etapa ${index + 1} está inválido ou fora de ordem.`);
     }
     return step;
   });
+  const importedEnd = typeof values.get("manual_fim") === "string" ? values.get("manual_fim").trim() : "";
+  result.manual_fim = importedEnd || result.steps.at(-1).manual_horario;
+  result.endTimeEstimated = !importedEnd;
+  if (!TIME.test(result.manual_fim) || result.manual_fim <= result.manual_inicio ||
+      result.steps.at(-1).manual_horario > result.manual_fim) {
+    throw new Error("O hor\u00e1rio final est\u00e1 ausente ou inv\u00e1lido. Preencha-o no formul\u00e1rio para continuar.");
+  }
   result.photoFilesNeedReselection = (values.get("manual_fotografia") || []).some((value) => value.trim());
   return result;
 }

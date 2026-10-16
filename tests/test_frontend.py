@@ -510,7 +510,7 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(request.method, 'POST')
         self.assertEqual(request.post_data_json['cidade'], 'Belo Horizonte, MG')
 
-    def manual_import_document(self, count=7, *, missing=None):
+    def manual_import_document(self, count=7, *, missing=None, include_end=True):
         fields = [
             {"name": "manual_titulo", "value": "Roteiro restaurado"},
             {"name": "manual_data", "value": "2027-01-15"},
@@ -520,6 +520,8 @@ class FrontendTests(unittest.TestCase):
             {"name": "manual_transporte", "value": "A p\u00e9"},
             {"name": "manual_descricao", "value": "Um dia especial restaurado do arquivo."},
         ]
+        if not include_end:
+            fields = [field for field in fields if field["name"] != "manual_fim"]
         for i in range(count):
             fields.extend([
                 {"name": "manual_horario", "value": f"{8 + i:02d}:00"},
@@ -558,6 +560,21 @@ class FrontendTests(unittest.TestCase):
         self.page.locator('#manual-preview').click()
         expect(self.page.locator('.itinerary-steps .itinerary-step')).to_have_count(7)
         expect(self.page.locator('.itinerary-step').nth(3)).to_contain_text('Descri\u00e7\u00e3o da etapa 4.')
+        self.assertEqual(self.page.locator('.itinerary-step time').nth(6).inner_text(), '14:00')
+
+    def test_manual_import_legacy_backup_estimates_end_from_seventh_stage(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document(include_end=False))
+        expect(self.page.locator('#manual-import-confirm')).to_be_visible()
+        self.page.locator('#manual-import-apply').click()
+        form = self.page.locator('#manual-itinerary-form')
+        self.assertEqual(form.locator('[name=manual_fim]').input_value(), '14:00')
+        self.assertEqual(self.page.locator('#manual-steps .manual-step').count(), 7)
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('7 etapas recuperadas')
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Hor\u00e1rio final estimado pela etapa final: 14:00')
+        self.page.locator('#manual-preview').click()
+        expect(self.page.locator('.itinerary-steps .itinerary-step')).to_have_count(7)
         self.assertEqual(self.page.locator('.itinerary-step time').nth(6).inner_text(), '14:00')
 
     def test_manual_import_invalid_json_missing_fields_and_more_than_30_steps(self):

@@ -151,7 +151,7 @@ export function initManualItinerary(setItinerary) {
       throw new Error(`Adicione de 1 a ${MAX_STEPS} etapas para visualizar o roteiro.`);
     }
     if (data.horario_fim <= data.horario_inicio || itinerarySteps.some((step, index) =>
-      step.horario < data.horario_inicio || step.horario >= data.horario_fim ||
+      step.horario < data.horario_inicio || step.horario > data.horario_fim ||
       (index > 0 && step.horario < itinerarySteps[index - 1].horario))) {
       throw new Error("Confira o horário de término e a ordem dos horários das etapas.");
     }
@@ -226,18 +226,22 @@ export function initManualItinerary(setItinerary) {
     if (!pendingImport) return;
     const imported = pendingImport;
     form.reset();
-    for (const name of ["manual_titulo", "manual_data", "manual_cidade", "manual_inicio", "manual_fim", "manual_transporte", "manual_descricao"])
+    for (const name of ["manual_titulo", "manual_data", "manual_cidade", "manual_inicio", "manual_transporte", "manual_descricao"])
       form.elements[name].value = imported[name];
     steps.replaceChildren();
+    form.elements.manual_fim.value = imported.manual_fim;
     imported.steps.forEach((step) => addStep(step));
     updateStepControls();
     saved = false;
     saveButton.disabled = false;
     saveButton.textContent = "Guardar nosso encontro ♡";
     status.classList.remove("error");
-    status.textContent = imported.photoFilesNeedReselection
-      ? "Seu roteiro foi restaurado com sucesso ♡ As fotografias precisam ser selecionadas novamente."
-      : "Seu roteiro foi restaurado com sucesso ♡ As fotografias precisam ser selecionadas novamente caso queira adicioná-las.";
+    const recovered = `${imported.steps.length} ${imported.steps.length === 1 ? "etapa recuperada" : "etapas recuperadas"}`;
+    const estimatedEnd = imported.endTimeEstimated ? ` Hor\u00e1rio final estimado pela etapa final: ${imported.manual_fim}.` : "";
+    const photoMessage = imported.photoFilesNeedReselection
+      ? " As fotografias precisam ser selecionadas novamente."
+      : " Se quiser incluir fotografias, selecione os arquivos novamente.";
+    status.textContent = `Seu roteiro foi restaurado com sucesso \u2661 ${recovered}.${estimatedEnd}${photoMessage}`;
     importConfirm.close();
     form.elements.manual_titulo.focus();
   });
