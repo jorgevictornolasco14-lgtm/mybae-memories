@@ -696,7 +696,46 @@ class FrontendTests(unittest.TestCase):
         expect(self.page.locator('.location-controls')).to_be_visible()
         request = next(req for name, req in self.requests if name == 'ai')
         self.assertEqual(request.method, 'POST')
-        self.assertEqual(request.post_data_json['cidade'], 'Belo Horizonte, MG')
+        self.assertEqual(request.post_data_json, {
+            'cidade': 'Belo Horizonte, MG', 'data': self.page.locator('#planner-form [name=data]').input_value(),
+            'inicio': '09:00', 'duracao': '4', 'tipo': 'Romântico', 'preferencias': '', 'restricoes': '',
+        })
+
+    def test_planner_removed_fields_and_remaining_grid_are_responsive(self):
+        self.open()
+        form = self.page.locator('#planner-form')
+        expect(form.locator('[name=orcamento], [name=transporte]')).to_have_count(0)
+        self.assertNotIn('Orçamento do casal', form.inner_text())
+        self.assertNotIn('Como vamos?', form.inner_text())
+        self.assertEqual(form.locator('[name]').evaluate_all('(fields) => fields.map(field => field.name)'),
+                         ['cidade', 'data', 'inicio', 'duracao', 'tipo', 'preferencias', 'restricoes'])
+        for width in [320, 375, 768, 1440]:
+            self.page.set_viewport_size({'width': width, 'height': 1000})
+            self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), width)
+            for field in ['cidade', 'data', 'inicio', 'duracao', 'tipo', 'preferencias', 'restricoes']:
+                expect(form.locator(f'[name={field}]')).to_be_visible()
+            duration = form.locator('[name=duracao]').bounding_box()
+            kind = form.locator('[name=tipo]').bounding_box()
+            if width >= 768:
+                self.assertAlmostEqual(duration['y'], kind['y'], delta=1)
+                self.assertAlmostEqual(duration['width'], kind['width'], delta=1)
+        self.page.locator('#manual-itinerary-open').click()
+        expect(self.page.locator('#manual-itinerary-form [name=manual_transporte]')).to_have_count(1)
+
+    def test_planner_400_keeps_preferences_without_removed_fields(self):
+        self.responses['ai'] = (400, {'error': 'Confira os campos: orcamento, transporte'})
+        self.open()
+        self.fill_planner()
+        self.page.locator('#planner-form [name=preferencias]').fill('Um café tranquilo')
+        self.page.locator('#planner-form [name=restricoes]').fill('Evitar escadas')
+        self.page.locator('#planner-form button[type=submit]').click()
+        expect(self.page.locator('#planner-status')).to_contain_text('Seus dados continuam no formulário')
+        expect(self.page.locator('#planner-form [name=preferencias]')).to_have_value('Um café tranquilo')
+        expect(self.page.locator('#planner-form [name=restricoes]')).to_have_value('Evitar escadas')
+        expect(self.page.locator('#planner-form button[type=submit]')).to_be_enabled()
+        request = next(req for name, req in self.requests if name == 'ai')
+        self.assertNotIn('orcamento', request.post_data_json)
+        self.assertNotIn('transporte', request.post_data_json)
 
     def manual_import_document(self, count=7, *, missing=None, include_end=True):
         fields = [

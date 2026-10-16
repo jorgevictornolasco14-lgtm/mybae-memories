@@ -61,11 +61,13 @@ export function validatePreferences(data, today) {
   if (!text(data.cidade) || data.cidade.trim().length < 2 || data.cidade.length > 100 ||
     !isDate(data.data) || data.data < today || !time(data.inicio) ||
     !["2", "4", "6", "8"].includes(data.duracao) ||
-    !text(data.orcamento) || !Number.isFinite(Number(data.orcamento)) ||
-    Number(data.orcamento) < 0 || Number(data.orcamento) > 100000 ||
-    !text(data.tipo) || !text(data.transporte) ||
+    !text(data.tipo) ||
     (data.preferencias || "").length > 800 || (data.restricoes || "").length > 800) {
-    throw new Error("Confira cidade, data, horário, duração e orçamento antes de continuar.");
+    throw new Error("Confira cidade, data, horário, duração e tipo de passeio antes de continuar.");
   }
-  return { ...data, cidade: data.cidade.trim() };
+  return {
+    cidade: data.cidade.trim(), data: data.data, inicio: data.inicio,
+    duracao: data.duracao, tipo: data.tipo,
+    preferencias: data.preferencias || "", restricoes: data.restricoes || "",
+  };
 }

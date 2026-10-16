@@ -17,7 +17,11 @@ export function initPlanner(setItinerary) {
     try {
       const data = await api("ai", {
         method: "POST",
+        // The validator returns only the fields collected by this planner.
         body: validatePreferences(Object.fromEntries(new FormData(event.target)), todayKey()),
+        errorMessages: {
+          400: "Não foi possível gerar o roteiro com essas opções. Seus dados continuam no formulário.",
+        },
       });
       setItinerary(data);
       status.textContent = "Nosso roteiro está pronto. Vamos descobrir?";

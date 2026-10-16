@@ -54,7 +54,7 @@ As imagens locais são inspirações já presentes no projeto, identificadas na 
 
 ## Planejamento com IA e mapas
 
-Preencha cidade, data, horário, duração, orçamento, tipo de passeio e transporte; preferências e restrições são opcionais. O formulário valida os dados, impede envios concorrentes e envia os mesmos nomes de campos do frontend original. Somente o backend chama a IA; nenhuma chave Gemini ou Groq deve ser inserida aqui.
+Preencha cidade, data, horário, duração e tipo de passeio; preferências e restrições são opcionais. Orçamento e transporte foram removidos deste formulário e não são enviados, nem como campos ocultos ou valores padrão. O formulário valida os dados e impede envios concorrentes. Somente o backend chama a IA; nenhuma chave Gemini ou Groq deve ser inserida aqui. O backend precisa aceitar os dois campos como opcionais; veja a [alteração de contrato e sua verificação](docs/planner-simplification.md).
 
 Ao abrir o site, a seção de roteiros consulta `GET /api/roteiros` sem cache e mostra o primeiro registro publicado na ordem retornada pelo backend (`created_at` decrescente). A data do encontro e `updated_at` não definem o roteiro principal. Sem registros, há um convite para criar o primeiro roteiro; em falha, aparece uma mensagem com nova tentativa. O exemplo demonstrativo foi removido.
 

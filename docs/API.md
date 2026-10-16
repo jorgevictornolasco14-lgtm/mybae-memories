@@ -51,7 +51,7 @@ Validação local: a suíte `tests/test_frontend.py` inclui respostas simuladas;
 
 ## Formulário de IA
 
-JSON preserva os valores textuais do FormData original:
+JSON contém somente os sete campos do planejador simplificado, preservando seus valores textuais:
 
 ```json
 {
@@ -59,15 +59,13 @@ JSON preserva os valores textuais do FormData original:
   "data": "2026-12-01",
   "inicio": "09:00",
   "duracao": "4",
-  "orcamento": "150",
   "tipo": "Romântico",
-  "transporte": "Aplicativo",
   "preferencias": "",
   "restricoes": ""
 }
 ```
 
-O backend precisa validar limites, datas, transporte e tipos aceitos; aplicar proteção contra abuso e limitar o custo de IA. A chamada é pública e não permite escrita administrativa.
+Orçamento e transporte não são enviados. O ajuste local no backend torna `plannerFieldsSchema.orcamento` e `plannerFieldsSchema.transporte` opcionais, sem defaults, preservando os limites e enums para clientes que ainda os informem. Os demais campos, validação da resposta, limites de uso e timeout permanecem. A chamada é pública e não permite escrita administrativa. **O endpoint publicado consultado em 16/10/2026 ainda retornou HTTP 400 `Confira os campos: orcamento, transporte` para esse novo payload**; o ajuste do backend precisa ser publicado antes ou junto do frontend. Veja [detalhes e testes](planner-simplification.md).
 
 ## Roteiro
 
