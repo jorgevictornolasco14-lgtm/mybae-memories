@@ -28,8 +28,8 @@ await Promise.allSettled([
       }
       if (c.data_inicio_relacionamento) {
         const start = new Date(
-            c.data_inicio_relacionamento + "T00:00:00-03:00",
-          ),
+          c.data_inicio_relacionamento + "T00:00:00-03:00",
+        ),
           days = Math.floor(
             (new Date(todayKey() + "T00:00:00-03:00") - start) / 86400000,
           );
@@ -40,6 +40,6 @@ await Promise.allSettled([
         }
       }
     })
-    .catch(() => {}),
+    .catch(() => { }),
 ]);
 initAnimations();

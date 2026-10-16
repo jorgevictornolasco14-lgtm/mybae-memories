@@ -8,23 +8,27 @@
   color: var(--color-nude-light);
   border-bottom: 1px solid var(--tone-ffffff12);
 }
+
 .brand {
   font: italic 35px var(--font-title);
   letter-spacing: -1px;
   line-height: 1;
   white-space: nowrap;
 }
-.brand > span {
+
+.brand>span {
   color: var(--color-pink);
   font-size: 27px;
   margin-left: 6px;
 }
+
 .brand small {
   display: block;
   font: 8px var(--font-body);
   letter-spacing: 3px;
   margin-top: 10px;
 }
+
 .site-header nav {
   display: flex;
   align-items: center;
@@ -32,18 +36,22 @@
   font-size: 11px;
   color: var(--tone-e6dce6);
 }
+
 .nav-cta {
   border: 1px solid var(--tone-76617e);
   padding: 11px 18px;
   border-radius: 4px;
 }
+
 .nav-cta span {
   margin-left: 15px;
   color: var(--color-lilac-light);
 }
+
 .menu-toggle {
   display: none;
 }
+
 .hero {
   position: relative;
   overflow: hidden;
@@ -55,9 +63,11 @@
   grid-template-columns: 1.05fr 1fr;
   gap: 4%;
 }
+
 .hero-copy {
   z-index: 2;
 }
+
 .hero .eyebrow {
   color: var(--color-lilac-light);
   display: flex;
@@ -65,45 +75,55 @@
   gap: 12px;
   margin-bottom: 28px;
 }
+
 .tiny-star {
   font-size: 22px;
 }
+
 .hero h1 {
   font-size: clamp(45px, 5.1vw, 76px);
   line-height: 1.14;
   letter-spacing: -2px;
 }
+
 .hero h1 em {
   color: var(--color-lilac-light);
 }
+
 .hero-message {
   margin-top: 25px;
   font-size: 13px;
   color: var(--color-gray-light);
   max-width: 340px;
 }
+
 .couple {
   margin: 22px 0;
   font-size: 14px;
   letter-spacing: 1px;
 }
+
 .couple span {
   font: italic 24px var(--font-title);
   color: var(--color-pink);
   margin: 0 7px;
 }
+
 .hero .button {
   margin-top: 5px;
 }
+
 .together {
   color: var(--color-lilac-light);
   margin-top: 22px;
   font-size: 13px;
 }
+
 .hero-art {
   position: relative;
   min-height: 500px;
 }
+
 .polaroid {
   position: absolute;
   padding: 13px 13px 0;
@@ -113,10 +133,12 @@
   width: 62%;
   border: 1px solid var(--tone-fff6);
 }
+
 .polaroid img {
   width: 100%;
   height: 315px;
 }
+
 .polaroid figcaption {
   font-family: var(--font-title);
   font-size: 15px;
@@ -124,20 +146,24 @@
   padding: 14px 0 18px;
   font-style: italic;
 }
+
 .polaroid-back {
   top: 14px;
   left: 0;
   transform: rotate(-12deg);
   width: 55%;
 }
+
 .polaroid-back img {
   height: 280px;
 }
+
 .polaroid-front {
   right: -2%;
   top: 95px;
   transform: rotate(8deg);
 }
+
 .tape {
   position: absolute;
   left: 36%;
@@ -149,17 +175,20 @@
   backdrop-filter: blur(2px);
   clip-path: polygon(3% 0, 99% 6%, 95% 100%, 0 96%);
 }
+
 .hand-note {
   position: absolute;
   font: italic 20px var(--font-title);
   color: var(--color-nude);
 }
+
 .note-top {
   right: 4%;
   top: -30px;
   transform: rotate(10deg);
   line-height: 1.4;
 }
+
 .note-top span {
   color: var(--color-pink);
   font-size: 35px;
@@ -167,6 +196,7 @@
   right: -27px;
   bottom: -16px;
 }
+
 .drawn-heart {
   position: absolute;
   font-size: 110px;
@@ -176,6 +206,7 @@
   left: 6%;
   transform: rotate(-18deg);
 }
+
 .art-caption {
   position: absolute;
   bottom: -12px;
@@ -184,6 +215,7 @@
   letter-spacing: 1.2px;
   color: var(--tone-a89bad);
 }
+
 .hero-bottom {
   position: absolute;
   bottom: 28px;
@@ -196,21 +228,25 @@
   letter-spacing: 1.7px;
   color: var(--tone-aea1b3);
 }
+
 .hero-bottom a {
   display: flex;
   gap: 15px;
   align-items: center;
   letter-spacing: 0.6px;
 }
+
 .hero-bottom a span {
   font-size: 18px;
 }
+
 .hero-bottom i {
   font-style: normal;
   color: var(--color-pink);
   margin-left: 14px;
   font-size: 17px;
 }
+
 .ribbon {
   overflow: hidden;
   display: flex;
@@ -222,21 +258,26 @@
   color: var(--tone-74616f);
   border-bottom: 1px solid var(--tone-d9c7c1);
 }
+
 .ribbon span {
   font: italic 18px var(--font-title);
   white-space: nowrap;
 }
+
 .ribbon b {
   font-weight: 400;
   font-size: 23px;
 }
+
 .history {
   background: var(--tone-f9f5f0);
 }
+
 .timeline {
   display: grid;
   gap: 20px;
 }
+
 .memory {
   border-left: 1px solid var(--tone-c6acc9);
   padding: 0 0 25px 30px;
@@ -244,6 +285,7 @@
   display: flex;
   gap: 25px;
 }
+
 .memory:before {
   content: "♡";
   position: absolute;
@@ -253,36 +295,43 @@
   color: var(--tone-9c759f);
   font-size: 23px;
 }
+
 .memory img {
   width: 150px;
   height: 150px;
   border-radius: 8px;
 }
+
 .memory time,
 .memory small {
   font-size: 10px;
   letter-spacing: 1px;
   color: var(--tone-8e7188);
 }
+
 .memory h3 {
   font-family: var(--font-title);
   font-size: 27px;
   margin: 6px 0;
 }
+
 .memory p {
   font-size: 13px;
   color: var(--color-gray);
   max-width: 650px;
   white-space: pre-line;
 }
+
 .gallery-section {
   background: var(--tone-efe6df);
 }
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 25px;
 }
+
 .photo-card {
   border: 0;
   padding: 12px 12px 16px;
@@ -292,27 +341,33 @@
   transform: rotate(-1.5deg);
   transition: transform 0.3s;
 }
+
 .photo-card:nth-child(2n) {
   transform: rotate(1.5deg);
 }
+
 .photo-card:hover {
   transform: rotate(0) translateY(-5px);
 }
+
 .photo-card img {
   width: 100%;
   height: 270px;
   border-radius: 2px;
 }
+
 .photo-card span {
   display: block;
   font: italic 19px var(--font-title);
   padding: 13px 5px 2px;
 }
+
 .photo-card small {
   font-size: 10px;
   color: var(--color-gray);
   padding: 0 5px;
 }
+
 .sort-label {
   flex-direction: row;
   align-items: center;
@@ -320,44 +375,52 @@
   color: var(--color-gray);
   font-size: 10px;
 }
+
 .sort-label select {
   background: transparent;
   min-width: 140px;
   border-color: var(--tone-d7c8c1);
   font-size: 11px;
 }
+
 .section-footnote {
   text-align: center;
   font: italic 15px var(--font-title);
   color: var(--tone-917287);
   margin-top: 35px;
 }
+
 .calendar-layout {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 70px;
 }
+
 .calendar {
   border: var(--border);
   border-radius: 12px;
   padding: 28px;
   background: var(--tone-fffcf9);
 }
+
 .calendar-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .calendar-top h3 {
   text-transform: capitalize;
   font-family: var(--font-title);
   font-size: 24px;
 }
-.calendar-top > div {
+
+.calendar-top>div {
   display: flex;
   gap: 8px;
 }
+
 .weekdays,
 .calendar-days {
   display: grid;
@@ -365,11 +428,13 @@
   gap: 5px;
   text-align: center;
 }
+
 .weekdays {
   font-size: 10px;
   color: var(--tone-9c8a95);
   margin-bottom: 10px;
 }
+
 .calendar-days button {
   position: relative;
   aspect-ratio: 1.1;
@@ -379,15 +444,19 @@
   font-size: 12px;
   min-height: 38px;
 }
+
 .calendar-days button:hover {
   background: var(--tone-eee4f3);
 }
+
 .calendar-days .today {
   border-color: var(--color-lilac);
 }
+
 .calendar-days .selected {
   background: var(--color-lilac-light);
 }
+
 .calendar-days .has-event:after {
   content: "♡";
   position: absolute;
@@ -398,36 +467,44 @@
   font-size: 13px;
   line-height: 1.2;
 }
+
 .calendar-legend {
   font-size: 10px;
   color: var(--color-gray);
   margin-top: 20px;
   text-align: center;
 }
+
 .calendar-legend span {
   color: var(--tone-a04771);
   font-size: 16px;
 }
+
 .calendar-legend b {
   margin: 0 8px;
 }
+
 .upcoming {
   padding-top: 10px;
 }
-.upcoming > .eyebrow {
+
+.upcoming>.eyebrow {
   color: var(--tone-926c8b);
   margin-bottom: 12px;
 }
-.upcoming > h3 {
+
+.upcoming>h3 {
   font: 30px var(--font-title);
   margin-bottom: 25px;
 }
+
 .event {
   padding: 20px 0;
   border-bottom: var(--border);
   display: flex;
   gap: 18px;
 }
+
 .event-date {
   min-width: 48px;
   background: var(--tone-e7d9ee);
@@ -438,19 +515,23 @@
   line-height: 1.5;
   font-size: 19px;
 }
+
 .event-date small {
   display: block;
   font-size: 9px;
   text-transform: uppercase;
 }
+
 .event h4 {
   font-size: 15px;
   margin: 0 0 8px;
 }
+
 .event p {
   font-size: 12px;
   color: var(--color-gray);
 }
+
 .event .badge {
   display: inline-block;
   background: var(--tone-e7e9dd);
@@ -460,16 +541,20 @@
   font-size: 9px;
   margin-top: 8px;
 }
+
 .event details {
   font-size: 12px;
   margin-top: 10px;
 }
+
 .event details summary {
   cursor: pointer;
 }
-.upcoming > .text-link {
+
+.upcoming>.text-link {
   margin-top: 25px;
 }
+
 .planner {
   background: var(--color-black);
   color: var(--color-nude-light);
@@ -479,24 +564,30 @@
   padding-top: 85px;
   padding-bottom: 85px;
 }
+
 .planner-intro {
   position: relative;
 }
+
 .planner .eyebrow {
   color: var(--color-lilac-light);
   margin-bottom: 50px;
 }
+
 .planner h2 {
   font-size: clamp(40px, 4.1vw, 59px);
   line-height: 1.2;
 }
+
 .planner h2 em {
   color: var(--color-lilac-light);
 }
-.planner-intro > p:not(.eyebrow) {
+
+.planner-intro>p:not(.eyebrow) {
   margin-top: 25px;
   font-size: 16px;
 }
+
 .planner-intro .muted-light {
   font-size: 13px !important;
   line-height: 1.9;
@@ -504,6 +595,7 @@
   max-width: 350px;
   margin-top: 15px !important;
 }
+
 .planner-star {
   position: absolute;
   right: 0;
@@ -512,6 +604,7 @@
   font-size: 63px;
   font-weight: 400;
 }
+
 .planner-note {
   display: flex;
   gap: 15px;
@@ -521,41 +614,50 @@
   font: italic 17px var(--font-title);
   line-height: 1.7;
 }
+
 .planner-note span {
   font-size: 32px;
   color: var(--color-pink);
 }
+
 .planner-form {
   background: var(--color-black-soft);
   border: 1px solid var(--tone-ffffff0f);
   border-radius: 12px;
   padding: 30px;
 }
+
 .form-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 25px;
 }
+
 .form-title h3 {
   font: 23px var(--font-title);
 }
+
 .form-title span {
   font-size: 25px;
   color: var(--color-pink);
 }
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px 15px;
 }
+
 .span-2 {
   grid-column: 1/-1;
 }
+
 .planner-form label {
   font-size: 10px;
   color: var(--tone-d8cbdc);
 }
+
 .planner-form input,
 .planner-form select,
 .planner-form textarea {
@@ -565,13 +667,16 @@
   color-scheme: dark;
   font-size: 12px;
 }
+
 .planner-form input::placeholder,
 .planner-form textarea::placeholder {
   color: var(--tone-a69aa9);
 }
+
 .planner-form .button {
   margin-top: 24px;
 }
+
 .itinerary-toolbar {
   display: flex;
   justify-content: space-between;
@@ -579,6 +684,7 @@
   align-items: center;
   margin-bottom: 20px;
 }
+
 .segmented {
   display: flex;
   background: var(--tone-e9dfda);
@@ -586,6 +692,7 @@
   border-radius: 7px;
   gap: 4px;
 }
+
 .segmented button {
   border: 0;
   background: transparent;
@@ -593,14 +700,17 @@
   padding: 9px 20px;
   font-size: 11px;
 }
+
 .segmented button.active {
   background: var(--tone-fffcf8);
   box-shadow: 0 2px 4px var(--tone-17151c0a);
 }
+
 .export-actions {
   display: flex;
   gap: 8px;
 }
+
 .itinerary-paper {
   padding: 40px;
   border: 1px solid var(--tone-d2c4c4);
@@ -608,35 +718,42 @@
   background: var(--tone-fbf6ec);
   position: relative;
 }
+
 .itinerary-title {
   text-align: center;
   border-bottom: 1px solid var(--tone-d6c7c7);
   padding-bottom: 25px;
   margin-bottom: 30px;
 }
+
 .itinerary-title .eyebrow {
   color: var(--tone-9b6d84);
   margin-bottom: 12px;
 }
+
 .itinerary-title h3 {
   font: 42px var(--font-title);
   color: var(--tone-312634);
 }
+
 .itinerary-title p {
   font-size: 12px;
   color: var(--tone-84727c);
   margin-top: 12px;
 }
+
 .itinerary-title .script {
   font: italic 17px var(--font-title);
   color: var(--tone-9e6480);
 }
+
 .itinerary-steps {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   counter-reset: steps;
 }
+
 .itinerary-step {
   position: relative;
   border: 1px solid var(--tone-d8caca);
@@ -647,6 +764,7 @@
   min-height: 195px;
   background: var(--tone-fffcf650);
 }
+
 .step-number {
   position: absolute;
   left: -10px;
@@ -662,12 +780,14 @@
   font: 17px var(--font-title);
   z-index: 2;
 }
+
 .step-image {
   height: 100%;
   width: 100%;
   border-radius: 9px 0 0 9px;
   min-height: 195px;
 }
+
 .step-placeholder {
   background: var(--tone-e9e0df);
   display: flex;
@@ -678,17 +798,21 @@
   color: var(--tone-9b7d91);
   gap: 8px;
 }
+
 .step-placeholder span {
   font-size: 35px;
 }
+
 .step-placeholder small {
   font-size: 8px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
 .step-content {
   padding: 18px;
 }
+
 .time-tag {
   display: inline-block;
   background: var(--tone-c87596);
@@ -699,36 +823,43 @@
   font-weight: 600;
   margin-bottom: 10px;
 }
+
 .step-content h4 {
   font: 20px var(--font-title);
   line-height: 1.3;
   margin: 0 0 8px;
 }
+
 .step-content p {
   font-size: 11px;
   line-height: 1.7;
   color: var(--tone-70636b);
 }
-.step-content > a {
+
+.step-content>a {
   font-size: 10px;
   display: inline-block;
   margin-top: 10px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
 .location-controls {
   border-top: var(--border);
   margin-top: 12px;
   padding-top: 12px;
 }
+
 .location-controls label {
   font-size: 9px;
 }
+
 .location-controls input {
   font-size: 10px;
   min-height: 34px;
   padding: 6px;
 }
+
 .location-controls button {
   font-size: 10px;
   margin-top: 7px;
@@ -737,29 +868,35 @@
   border-radius: 4px;
   padding: 7px;
 }
+
 .location-controls select {
   font-size: 10px;
   margin-top: 8px;
   padding: 6px;
 }
+
 .location-message {
   margin-top: 7px !important;
   font-size: 10px !important;
 }
+
 .map-section {
   margin-top: 28px;
 }
+
 .route-map {
   height: 320px;
   width: 100%;
   border-radius: 10px;
   z-index: 0;
 }
+
 .map-note {
   font-size: 10px;
   color: var(--color-gray);
   margin-top: 10px;
 }
+
 .map-empty {
   padding: 28px;
   background: var(--tone-eee4df);
@@ -768,6 +905,7 @@
   font-size: 12px;
   color: var(--tone-796674);
 }
+
 .itinerary-extras {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -776,33 +914,40 @@
   padding-top: 22px;
   border-top: var(--border);
 }
+
 .itinerary-extras h4 {
   font-size: 12px;
   margin: 0 0 6px;
 }
+
 .itinerary-extras p,
 .itinerary-extras li {
   font-size: 11px;
   color: var(--tone-75646f);
 }
+
 .itinerary-extras ul {
   padding-left: 16px;
   margin: 0;
 }
+
 .poster-footer {
   text-align: center;
   font: italic 17px var(--font-title);
   color: var(--tone-9e6480);
   margin-top: 30px;
 }
+
 .poster-mode .location-controls,
-.poster-mode .step-content > a,
+.poster-mode .step-content>a,
 .poster-mode .map-section {
   display: none;
 }
+
 .poster-mode .itinerary-title h3 {
   font-size: 52px;
 }
+
 .poster-mode .itinerary-step:after {
   content: "♡";
   position: absolute;
@@ -811,33 +956,40 @@
   color: var(--tone-b87b94);
   font-size: 18px;
 }
+
 .poster-mode .itinerary-steps {
   gap: 30px 24px;
 }
+
 .closing {
   text-align: center;
   background: var(--tone-e9dce8);
   padding: 65px 20px 70px;
 }
-.closing > span:first-child {
+
+.closing>span:first-child {
   font-size: 45px;
   color: var(--tone-9e6480);
   line-height: 1;
 }
+
 .closing p {
   font-size: 13px;
   margin: 15px 0 10px;
   color: var(--tone-776775);
 }
+
 .closing h2 {
   font-size: 42px;
 }
+
 .closing .eyebrow {
   display: block;
   font-size: 8px;
   margin-top: 25px;
   color: var(--tone-7b6678);
 }
+
 footer {
   display: flex;
   justify-content: space-between;
@@ -847,9 +999,11 @@ footer {
   padding: 38px 6%;
   gap: 20px;
 }
+
 footer .brand {
   font-size: 28px;
 }
+
 footer p {
   font-size: 10px;
   color: var(--tone-aca1b0);
@@ -864,37 +1018,44 @@ footer p {
   padding: 50px 0 0;
   overflow: visible;
 }
+
 .lightbox[open] {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .lightbox figure {
   max-width: 80%;
   text-align: center;
 }
+
 .lightbox img {
   max-height: 75vh;
   max-width: 100%;
   margin: auto;
   object-fit: contain;
 }
+
 .lightbox figcaption {
   font-size: 13px;
   margin-top: 15px;
 }
+
 .lightbox #lightbox-close {
   position: absolute;
   right: 0;
   top: 0;
   font-size: 30px;
 }
+
 .saved-choices {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
+
 .saved-choices button {
   font-size: 12px;
   background: var(--tone-e8dbea);
@@ -902,6 +1063,7 @@ footer p {
   border-radius: 5px;
   padding: 9px 12px;
 }
+
 .map-pin {
   border: 2px solid var(--tone-fff) !important;
   border-radius: 50%;
@@ -912,4 +1074,6 @@ footer p {
   font-family: var(--font-body);
 }
 
-.poster-mode .itinerary-steps { grid-template-columns: minmax(0, 1fr); }
+.poster-mode .itinerary-steps {
+  grid-template-columns: minmax(0, 1fr);
+}

@@ -8,13 +8,13 @@ const text = (value) => typeof value === "string" && value.trim().length > 0;
 const time = (value) => typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value);
 export function validateItinerary(value) {
   if (!object(value) || !text(value.titulo) || !text(value.cidade) ||
-      !time(value.inicio) || !time(value.fim) ||
-      (value.data != null && !isDate(value.data)) ||
-      !Array.isArray(value.etapas) || !value.etapas.length || value.etapas.length > 30 ||
-      !value.etapas.every((step) => object(step) && text(step.nome) && time(step.horario) &&
-        text(step.descricao) && text(step.busca)) ||
-      (value.recomendacoes != null && (!Array.isArray(value.recomendacoes) ||
-        !value.recomendacoes.every((item) => typeof item === "string")))) {
+    !time(value.inicio) || !time(value.fim) ||
+    (value.data != null && !isDate(value.data)) ||
+    !Array.isArray(value.etapas) || !value.etapas.length || value.etapas.length > 30 ||
+    !value.etapas.every((step) => object(step) && text(step.nome) && time(step.horario) &&
+      text(step.descricao) && text(step.busca)) ||
+    (value.recomendacoes != null && (!Array.isArray(value.recomendacoes) ||
+      !value.recomendacoes.every((item) => typeof item === "string")))) {
     throw new Error("O serviço enviou um roteiro inválido. Tente gerar novamente.");
   }
   const result = { ...value, recomendacoes: value.recomendacoes ?? [] };
@@ -42,12 +42,12 @@ export function validateResponse(path, data) {
 }
 export function validatePreferences(data, today) {
   if (!text(data.cidade) || data.cidade.trim().length < 2 || data.cidade.length > 100 ||
-      !isDate(data.data) || data.data < today || !time(data.inicio) ||
-      !["2", "4", "6", "8"].includes(data.duracao) ||
-      !text(data.orcamento) || !Number.isFinite(Number(data.orcamento)) ||
-      Number(data.orcamento) < 0 || Number(data.orcamento) > 100000 ||
-      !text(data.tipo) || !text(data.transporte) ||
-      (data.preferencias || "").length > 800 || (data.restricoes || "").length > 800) {
+    !isDate(data.data) || data.data < today || !time(data.inicio) ||
+    !["2", "4", "6", "8"].includes(data.duracao) ||
+    !text(data.orcamento) || !Number.isFinite(Number(data.orcamento)) ||
+    Number(data.orcamento) < 0 || Number(data.orcamento) > 100000 ||
+    !text(data.tipo) || !text(data.transporte) ||
+    (data.preferencias || "").length > 800 || (data.restricoes || "").length > 800) {
     throw new Error("Confira cidade, data, horário, duração e orçamento antes de continuar.");
   }
   return { ...data, cidade: data.cidade.trim() };

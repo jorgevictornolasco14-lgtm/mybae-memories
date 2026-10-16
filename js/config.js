@@ -1,5 +1,5 @@
 // Endereço público do backend, sem /api no final. Vazio desativa as chamadas.
-export const CONFIG = { API_BASE_URL: "", REQUEST_TIMEOUT_MS: 55000 };
+export const CONFIG = { API_BASE_URL: "https://mybae-backend-seven.vercel.app", REQUEST_TIMEOUT_MS: 55000 };
 // Rotas observadas no frontend original; confirmar com o backend privado.
 export const ENDPOINTS = Object.fromEntries(
   ["memorias", "galeria", "encontros", "configuracoes", "roteiros", "ai", "mapas"].map(

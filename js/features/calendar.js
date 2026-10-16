@@ -34,19 +34,19 @@ export function initCalendar(onItinerary) {
       ? emptyState("Tempo para o nosso próximo capítulo.", loadError, true)
       : rows.length
         ? rows
-            .map(
-              (row) =>
-                `<article class="event"><div class="event-date">${Number(row.data_encontro.slice(-2))}<small>${e(formatDate(row.data_encontro, { month: "short" }))}</small></div><div><h4>${e(row.titulo)}</h4><p>${e(row.horario_inicio.slice(0, 5))} · ${e(row.local || row.cidade)}</p><span class="badge">${e(row.status)}</span><details><summary>Detalhes do encontro</summary><p>${e(row.descricao)}</p><p>${e(row.endereco)}</p>${row.orcamento != null ? `<p>Orçamento: ${e(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(row.orcamento))}</p>` : ""}<a class="text-link" href="${e(mapsURL([row.endereco || row.local, row.cidade].join(", ")))}" target="_blank" rel="noopener noreferrer">Pesquisar no mapa ↗</a><p>${e(row.preferencias)}</p><button class="text-link event-route" data-event="${e(row.id)}">Ver roteiro associado ↗</button></details></div></article>`,
-            )
-            .join("")
+          .map(
+            (row) =>
+              `<article class="event"><div class="event-date">${Number(row.data_encontro.slice(-2))}<small>${e(formatDate(row.data_encontro, { month: "short" }))}</small></div><div><h4>${e(row.titulo)}</h4><p>${e(row.horario_inicio.slice(0, 5))} · ${e(row.local || row.cidade)}</p><span class="badge">${e(row.status)}</span><details><summary>Detalhes do encontro</summary><p>${e(row.descricao)}</p><p>${e(row.endereco)}</p>${row.orcamento != null ? `<p>Orçamento: ${e(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(row.orcamento))}</p>` : ""}<a class="text-link" href="${e(mapsURL([row.endereco || row.local, row.cidade].join(", ")))}" target="_blank" rel="noopener noreferrer">Pesquisar no mapa ↗</a><p>${e(row.preferencias)}</p><button class="text-link event-route" data-event="${e(row.id)}">Ver roteiro associado ↗</button></details></div></article>`,
+          )
+          .join("")
         : emptyState(
-            day
-              ? "Um dia cheio de possibilidades."
-              : "Vamos marcar algo especial?",
-            day
-              ? "Nenhum encontro publicado nesta data."
-              : "Os próximos encontros publicados aparecerão aqui.",
-          );
+          day
+            ? "Um dia cheio de possibilidades."
+            : "Vamos marcar algo especial?",
+          day
+            ? "Nenhum encontro publicado nesta data."
+            : "Os próximos encontros publicados aparecerão aqui.",
+        );
     $("#event-list")
       .querySelectorAll(".event-route")
       .forEach((button) =>

@@ -4,7 +4,7 @@ export const escapeHTML = (value) =>
     /[&<>"']/g,
     (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
+      c
       ],
   );
 export { formatDate, todayKey } from "../utils/dates.js";
@@ -45,7 +45,7 @@ export function safeImage(value) {
     if (url.username || url.password || url.search || url.hash) return "";
     if (url.origin === window.location.origin && url.pathname.startsWith("/assets/images/")) return url.href;
     if (url.protocol === "https:" && /^[a-z0-9-]+\.supabase\.co$/.test(url.hostname) &&
-        url.pathname.startsWith("/storage/v1/object/public/")) return url.href;
-  } catch {}
+      url.pathname.startsWith("/storage/v1/object/public/")) return url.href;
+  } catch { }
   return "";
 }

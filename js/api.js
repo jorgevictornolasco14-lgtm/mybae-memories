@@ -9,7 +9,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body } = {}) {
   try {
     const base = new URL(CONFIG.API_BASE_URL);
     if (base.username || base.password || base.search || base.hash ||
-        (base.protocol !== "https:" && !(base.protocol === "http:" && ["localhost", "127.0.0.1"].includes(base.hostname)))) throw new Error();
+      (base.protocol !== "https:" && !(base.protocol === "http:" && ["localhost", "127.0.0.1"].includes(base.hostname)))) throw new Error();
     url = `${base.href.replace(/\/$/, "")}${endpoint.path}`;
   } catch { return Promise.reject(new Error("O endereço do serviço está inválido. Verifique a configuração do site.")); }
   const key = JSON.stringify([url, method, body]);
@@ -26,7 +26,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body } = {}) {
       if (!response.ok) {
         const message = response.status === 429 ? "Muitas solicitações. Aguarde um pouco e tente novamente." :
           response.status === 503 ? "O serviço está temporariamente indisponível. Tente novamente em breve." :
-          "Não foi possível concluir a solicitação. Tente novamente.";
+            "Não foi possível concluir a solicitação. Tente novamente.";
         throw Object.assign(new Error(message), { status: response.status });
       }
       let data;

@@ -33,23 +33,23 @@ export async function initGallery() {
         ? String(a.legenda || "").localeCompare(String(b.legenda || ""), "pt-BR")
         : sort === "oldest"
           ? (a.data_foto || a.created_at || "").localeCompare(
-              b.data_foto || b.created_at || "",
-            )
+            b.data_foto || b.created_at || "",
+          )
           : (b.data_foto || b.created_at || "").localeCompare(
-              a.data_foto || a.created_at || "",
-            ),
+            a.data_foto || a.created_at || "",
+          ),
     );
     $("#gallery-grid").innerHTML = photos.length
       ? photos
-          .map(
-            (row, i) =>
-              `<button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(safeImage(row.imagem_url))}" alt="${e(row.descricao || row.legenda || "Fotografia do álbum")}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button>`,
-          )
-          .join("")
+        .map(
+          (row, i) =>
+            `<button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(safeImage(row.imagem_url))}" alt="${e(row.descricao || row.legenda || "Fotografia do álbum")}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button>`,
+        )
+        .join("")
       : emptyState(
-          "As nossas melhores páginas ainda vêm.",
-          "As fotografias aprovadas aparecerão aqui, uma memória de cada vez.",
-        );
+        "As nossas melhores páginas ainda vêm.",
+        "As fotografias aprovadas aparecerão aqui, uma memória de cada vez.",
+      );
     $("#gallery-grid")
       .querySelectorAll("button[data-index]")
       .forEach((button) =>

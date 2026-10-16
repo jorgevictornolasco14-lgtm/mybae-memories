@@ -4,9 +4,9 @@ export function formatDate(
 ) {
   return value
     ? new Intl.DateTimeFormat("pt-BR", {
-        ...options,
-        timeZone: "America/Sao_Paulo",
-      }).format(new Date(`${value.slice(0, 10)}T12:00:00-03:00`))
+      ...options,
+      timeZone: "America/Sao_Paulo",
+    }).format(new Date(`${value.slice(0, 10)}T12:00:00-03:00`))
     : "";
 }
 export function todayKey() {

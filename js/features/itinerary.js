@@ -72,7 +72,7 @@ export function initItinerary() {
   let current = sampleItinerary,
     isExample = true,
     mode = "interactive",
-    cleanup = () => {};
+    cleanup = () => { };
   const samplePhotos = [
     "landscape",
     "park",
