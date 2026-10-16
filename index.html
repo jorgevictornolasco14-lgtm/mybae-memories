@@ -107,6 +107,10 @@
             <option value="caption">Legenda</option>
           </select></label>
       </div>
+      <div class="gallery-actions">
+        <button id="gallery-add-photo" class="button primary" type="button"><span aria-hidden="true">📷</span> Adicionar foto ♡</button>
+      </div>
+      <p id="gallery-upload-feedback" class="gallery-feedback" role="status" aria-live="polite" hidden></p>
       <div id="gallery-grid" class="gallery-grid" aria-live="polite">
         <p class="loading">Preparando nosso álbum…</p>
       </div>
@@ -277,6 +281,26 @@
     <button id="lightbox-next" class="icon-button" aria-label="Próxima fotografia">
       →
     </button>
+  </dialog>
+  <dialog id="gallery-upload-dialog" class="upload-dialog" aria-labelledby="upload-title">
+    <form id="gallery-upload-form" class="upload-form" novalidate>
+      <div class="upload-heading">
+        <div><p class="eyebrow">UMA MEMÓRIA A MAIS</p><h2 id="upload-title">Compartilhe um <em>instante.</em></h2></div>
+        <button id="upload-close" class="icon-button" type="button" aria-label="Fechar formulário">×</button>
+      </div>
+      <label class="upload-picker" for="upload-file">
+        <span class="upload-icon" aria-hidden="true">♡</span>
+        <strong>Escolha uma fotografia</strong>
+        <span>JPEG, PNG ou WebP · até 2,8 MB</span>
+        <input id="upload-file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required />
+      </label>
+      <div id="upload-preview-wrap" class="upload-preview-wrap" hidden><img id="upload-preview" alt="Pré-visualização da fotografia selecionada" /><button id="upload-remove" type="button" class="text-link">Escolher outra</button></div>
+      <label>Legenda<input name="legenda" required maxlength="120" placeholder="Um instante para guardar" /></label>
+      <label>Descrição <span class="optional">opcional</span><textarea name="descricao" maxlength="500" rows="2" placeholder="Conte um pouquinho sobre essa lembrança…"></textarea></label>
+      <label>Data da fotografia<input name="data_foto" type="date" required /></label>
+      <p id="upload-status" class="upload-status" role="status" aria-live="polite"></p>
+      <div class="upload-actions"><button id="upload-cancel" class="button outline" type="button">Cancelar</button><button id="upload-submit" class="button primary" type="submit">Publicar foto ♡</button></div>
+    </form>
   </dialog>
 </body>
 

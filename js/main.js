@@ -2,6 +2,7 @@ import { initMemories } from "./features/memories.js";
 import { initNavbar } from "./components/navbar.js";
 import { $, todayKey } from "./components/ui.js";
 import { initGallery } from "./features/gallery.js";
+import { initGalleryUpload } from "./features/gallery-upload.js";
 import { initCalendar } from "./features/calendar.js";
 import { initItinerary } from "./features/itinerary.js";
 import { initAnimations } from "./components/animations.js";
@@ -10,8 +11,10 @@ initNavbar();
 $('#planner-form [name="data"]').min = todayKey();
 const itineraries = initItinerary();
 initAnimations();
+const galleryReady = initGallery();
+initGalleryUpload(async () => (await galleryReady)());
 await Promise.allSettled([
-  initGallery(),
+  galleryReady,
   initCalendar((id) => itineraries.showForEvent(id)),
   initMemories(),
   initSettings(),

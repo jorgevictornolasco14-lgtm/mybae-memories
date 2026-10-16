@@ -21,10 +21,12 @@ export async function loadSection(
   const run = async () => {
     target.setAttribute("aria-busy", "true");
     target.innerHTML = '<p class="loading">Carregando…</p>';
+    let loaded = true;
     try {
       const data = await fetcher();
       render(data);
     } catch (error) {
+      loaded = false;
       target.innerHTML = emptyState(
         emptyTitle,
         error.status === 503 ? emptyDescription : error.message,
@@ -32,8 +34,9 @@ export async function loadSection(
       );
       target.querySelector(".retry").addEventListener("click", run);
     } finally { target.setAttribute("aria-busy", "false"); }
+    return loaded;
   };
-  await run();
+  return run();
 }
 export function mapsURL(query) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;

@@ -83,6 +83,53 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(self.page.locator('input[type=password]').count(), 0)
         self.assertTrue(all('admin' not in name for name, _ in self.requests))
 
+    def test_gallery_upload_modal_preview_validation_and_publish_refresh(self):
+        self.open()
+        expect(self.page.locator('#gallery-add-photo')).to_contain_text('Adicionar foto ♡')
+        self.page.locator('#gallery-add-photo').click()
+        expect(self.page.locator('#gallery-upload-dialog')).to_be_visible()
+        self.page.keyboard.press('Escape')
+        expect(self.page.locator('#gallery-upload-dialog')).not_to_be_visible()
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.page.locator('#gallery-add-photo').click()
+        bounds = self.page.locator('#gallery-upload-dialog').bounding_box()
+        self.assertGreaterEqual(bounds['x'], 0)
+        self.assertLessEqual(bounds['x'] + bounds['width'], 390)
+        self.page.locator('#upload-file').set_input_files({
+            'name': 'foto.png', 'mimeType': 'image/png',
+            'buffer': base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')
+        })
+        expect(self.page.locator('#upload-preview-wrap')).to_be_visible()
+        expect(self.page.locator('#upload-preview')).to_have_attribute('src', re.compile('^blob:'))
+        self.page.locator('[name=legenda]').fill('Nosso passeio')
+        self.page.locator('#upload-submit').click()
+        expect(self.page.locator('#gallery-upload-feedback')).to_contain_text('Fotografia publicada com carinho!')
+        upload = [request for name, request in self.requests if name == 'galeria' and request.method == 'POST']
+        self.assertEqual(len(upload), 1)
+        self.assertRegex(upload[0].headers['content-type'], r'^multipart/form-data; boundary=')
+        multipart = upload[0].post_data_buffer.decode('latin1')
+        self.assertIn('name="file"', multipart)
+        self.assertIn('name="legenda"', multipart)
+        self.assertIn('Nosso passeio', multipart)
+        self.assertIn('name="data_foto"', multipart)
+        self.assertEqual(sum(1 for name, request in self.requests if name == 'galeria' and request.method == 'GET'), 2)
+
+    def test_gallery_upload_rejects_type_and_size_and_handles_api_error(self):
+        self.open()
+        self.page.locator('#gallery-add-photo').click()
+        self.page.locator('#upload-file').set_input_files({'name': 'arquivo.pdf', 'mimeType': 'application/pdf', 'buffer': b'%PDF'})
+        expect(self.page.locator('#upload-status')).to_contain_text('JPEG, PNG ou WebP')
+        self.page.locator('#upload-file').set_input_files({'name': 'grande.png', 'mimeType': 'image/png', 'buffer': b'x' * (3 * 1024 * 1024)})
+        expect(self.page.locator('#upload-status')).to_contain_text('até 2,8 MB')
+        self.page.locator('#upload-cancel').click()
+        self.responses['galeria'] = (503, {'error': 'indisponível'})
+        self.page.locator('#gallery-add-photo').click()
+        self.page.locator('#upload-file').set_input_files({'name': 'foto.png', 'mimeType': 'image/png', 'buffer': base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')})
+        self.page.locator('[name=legenda]').fill('Tente novamente')
+        self.page.locator('#upload-submit').click()
+        expect(self.page.locator('#upload-status')).to_contain_text('temporariamente indisponível')
+        expect(self.page.locator('#gallery-upload-dialog')).to_be_visible()
+
     def test_settings_array_updates_all_branding_and_rerenders(self):
         self.responses['configuracoes'] = [{
             'nome_site': 'Nosso Universo', 'nome_pessoa_1': 'Pessoa A',

@@ -7,3 +7,4 @@ export const ENDPOINTS = Object.fromEntries(
     (name) => [name, { path: `/api/${name}`, method: ["ai", "mapas"].includes(name) ? "POST" : "GET" }],
   ),
 );
+ENDPOINTS.galeriaUpload = { path: "/api/galeria", method: "POST" };

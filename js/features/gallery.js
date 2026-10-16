@@ -69,14 +69,19 @@ export async function initGallery() {
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
   });
-  await loadSection(
+  async function refreshGallery() {
+    const loaded = await loadSection(
     $("#gallery-grid"),
-    () => api("galeria"),
+    () => api("galeria", { cache: "no-store" }),
     (data) => {
       photos = data.filter((row) => safeImage(row.imagem_url));
       render();
     },
     "Um álbum esperando por nós.",
     "Quando o álbum estiver conectado, as fotos publicadas aparecerão aqui.",
-  );
+    );
+    return loaded;
+  }
+  await refreshGallery();
+  return refreshGallery;
 }

@@ -345,6 +345,31 @@
   background: var(--tone-efe6df);
 }
 
+.gallery-actions { display: flex; justify-content: flex-end; margin: -24px 0 28px; }
+.gallery-actions .button { min-height: 46px; }
+.gallery-feedback { margin: 0 0 22px; padding: 13px 17px; border-radius: 7px; color: var(--tone-473443); background: var(--tone-ffffff70); }
+.upload-dialog { width: min(590px, calc(100% - 28px)); max-height: min(90dvh, 820px); overflow-y: auto; border: 1px solid var(--tone-d7cdc9); border-radius: 14px; padding: 0; background: var(--color-nude-light); color: var(--color-black); box-shadow: 0 24px 80px #17151c55; }
+.upload-dialog::backdrop { background: #17151cbb; backdrop-filter: blur(3px); }
+.upload-form { display: grid; gap: 16px; padding: clamp(20px, 5vw, 34px); }
+.upload-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 2px; }
+.upload-heading .eyebrow { color: var(--tone-806277); margin-bottom: 8px; }
+.upload-heading h2 { font-size: clamp(26px, 6vw, 34px); }
+.upload-picker { display: flex; align-items: center; text-align: center; flex-direction: column; justify-content: center; gap: 3px; min-height: 140px; padding: 18px; border: 1px dashed var(--tone-9b789b); border-radius: 10px; background: #fff9; cursor: pointer; }
+.upload-picker:hover { background: var(--tone-a890c51a); }
+.upload-picker input { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; }
+.upload-picker:focus-within { outline: 3px solid var(--color-pink); outline-offset: 3px; }
+.upload-icon { color: var(--tone-96687f); font-size: 28px; line-height: 1.2; }
+.upload-picker strong { font: 20px var(--font-title); }
+.upload-picker span:last-of-type { color: var(--color-gray); font-size: 11px; }
+.upload-preview-wrap { display: grid; justify-items: center; gap: 7px; }
+.upload-preview-wrap img { width: 100%; max-height: 240px; object-fit: contain; border-radius: 7px; background: #e9e2e4; }
+.upload-form label { display: flex; flex-direction: column; gap: 6px; }
+.upload-status { min-height: 0; color: var(--tone-b93158); font-size: 12px; }
+.upload-status:empty { display: none; }
+.upload-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.upload-actions .button { min-height: 46px; }
+.upload-actions .outline { border-color: var(--tone-d7cdc9); }
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

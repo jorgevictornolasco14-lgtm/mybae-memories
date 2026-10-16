@@ -14,13 +14,13 @@ As outras quatro coleções abaixo foram consultadas via GET e retornaram HTTP 2
 | POST | /api/ai | Objeto de roteiro |
 | POST | /api/mapas | Array: nome (endereço exibido), latitude e longitude numéricas e válidas |
 
-## CORS: bloqueio confirmado
+## CORS e upload da galeria
 
-A origem de produção informada é `https://mybae-memories.vercel.app` (sem barra final). O backend respondeu **403** com `{"error":"Origem não autorizada."}` tanto em GET quanto em OPTIONS para essa origem, sem `Access-Control-Allow-Origin`. O mesmo ocorreu para `http://localhost:8080` e `http://127.0.0.1:8080`.
+Verificação HTTP em 15/10/2026 (America/Sao_Paulo): `GET /api/galeria` retornou HTTP 200 com `[]`, inclusive com `Origin: https://mybae-memories.vercel.app`. O preflight OPTIONS para POST nessa origem retornou 204 e autorizou `GET`, `POST` e o header `Content-Type`. A origem de produção está autorizada no momento da verificação. Isso confirma CORS e a rota de leitura, mas não comprova o contrato do POST nem os campos de resposta.
 
-Teste real no Edge: abrir a página publicada e executar Fetch para configurações resulta em `Failed to fetch`. O frontend modificado, servido em `http://127.0.0.1:8080`, também tem suas cinco leituras bloqueadas por CORS; apresenta o erro de conexão e nova tentativa, sem erro JavaScript não capturado. Captura local: `test-results/live-cors-error.png` (ignorada pelo Git). Não foi simulado sucesso de integração real.
+A interface envia `POST /api/galeria` como `multipart/form-data`, com `file`, `legenda`, `descricao` e `data_foto`; o limite local é 2,8 MiB. Esses campos seguem o requisito desta implementação, pois a API não disponibiliza documentação pública do contrato de upload e não foi feito POST real para evitar publicar arquivo de teste. Confirme no backend os nomes, o limite e as regras de publicação automática antes de produção. A resposta 2xx do POST é tratada como confirmação e dispara novo GET sem cache.
 
-Correção necessária no backend: adicionar a origem exata de produção à lista permitida e, se desejado, as duas origens locais acima. Para uma origem autorizada, GET deve incluir `Access-Control-Allow-Origin` com essa origem e `Vary: Origin`, inclusive em respostas de erro. OPTIONS deve responder ao preflight com sucesso e permitir os métodos/headers efetivamente usados (`GET`, `POST`, `Accept`, `Content-Type`). O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. Não usar `no-cors`: isso impediria a leitura do JSON. A configuração CORS e o deploy do backend não foram alterados neste repositório.
+O frontend usa `mode: "cors"`, `credentials: "omit"` e não envia tokens. GET e OPTIONS da origem publicada passaram; uma publicação real ainda depende de o endpoint aceitar o multipart descrito acima. O backend e seu deploy não foram alterados neste repositório.
 
 Reproduzir a verificação HTTP:
 
@@ -31,7 +31,7 @@ curl.exe -i -X OPTIONS -H "Origin: https://mybae-memories.vercel.app" -H "Access
 
 Após a correção, servir o frontend localmente, verificar em Network que `/api/configuracoes` retorna 200 legível pelo navegador e conferir título, marcas, nomes e mensagem contra o primeiro registro. Repetir da origem publicada após um deploy autorizado. Para galeria, memórias, encontros e roteiros, confirmar os campos com registros reais antes de alterar mapeamentos; não inserir dados de teste no banco de produção para inferir contratos.
 
-Validação local: os 18 testes de `tests/test_frontend.py` passaram no Edge (`BROWSER_CHANNEL=msedge`), incluindo configurações em array, primeiro registro, campos inválidos/nulos, carregamento, array vazio, erro HTTP e nova tentativa, atualização das marcas após renderizar outro roteiro e as funcionalidades existentes (galeria, calendário, planejador, mapas, exportações PNG/PDF e responsividade). Esses testes usam respostas simuladas; a verificação real acima permanece bloqueada pelo CORS. Nenhum login, chave Supabase, commit, push ou deploy foi adicionado/executado nesta integração.
+Validação local: a suíte `tests/test_frontend.py` inclui respostas simuladas; consulte o resultado mais recente ao executar. Nenhum login, chave Supabase, commit, push ou deploy foi adicionado/executado nesta integração.
 
 ## Formulário de IA
 
