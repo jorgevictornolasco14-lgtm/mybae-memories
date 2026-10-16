@@ -35,7 +35,12 @@ export function initCalendar(onItinerary) {
       time.textContent = `${formatDate(row.data_encontro)} · ${row.horario_inicio.slice(0, 5)}`;
       const title = document.createElement("h3");
       title.textContent = row.titulo;
-      item.append(time, title);
+      const routeButton = document.createElement("button");
+      routeButton.className = "text-link event-dialog-route";
+      routeButton.type = "button";
+      routeButton.dataset.event = row.id;
+      routeButton.textContent = "Ver cronograma completo ↗";
+      item.append(time, title, routeButton);
       for (const value of [row.local, row.endereco, row.cidade, row.descricao]) {
         if (!value) continue;
         const detail = document.createElement("p");
@@ -44,6 +49,14 @@ export function initCalendar(onItinerary) {
       }
       return item;
     }));
+    list.querySelectorAll(".event-dialog-route").forEach((button) => {
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        try { await onItinerary(button.dataset.event); }
+        catch (error) { button.textContent = error.message; }
+        finally { button.disabled = false; }
+      });
+    });
     if (!dialog.open) dialog.showModal();
   }
 
@@ -139,6 +152,15 @@ export function initCalendar(onItinerary) {
     showEvents();
     load();
   }
+
+  window.addEventListener("mybae:meeting-created", (event) => {
+    const date = event.detail?.date;
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    [year, month] = date.split("-").map(Number);
+    month -= 1;
+    selected = date;
+    load();
+  });
 
   $("#prev-month").addEventListener("click", () => move(-1));
   $("#next-month").addEventListener("click", () => move(1));

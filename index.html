@@ -355,6 +355,13 @@
       <div class="upload-actions"><button id="upload-cancel" class="button outline" type="button">Cancelar</button><button id="upload-submit" class="button primary" type="submit">Publicar foto ♡</button></div>
     </form>
   </dialog>
+  <dialog id="manual-import-confirm" class="manual-itinerary-dialog manual-import-confirm" aria-labelledby="manual-import-confirm-title">
+    <div class="manual-import-confirm-content">
+      <h2 id="manual-import-confirm-title">Restaurar este <em>roteiro?</em></h2>
+      <p>Isso substituirá os dados atuais do formulário. As fotografias precisam ser selecionadas novamente.</p>
+      <div class="manual-form-actions"><button id="manual-import-cancel" class="button outline" type="button">Cancelar</button><button id="manual-import-apply" class="button primary" type="button">Restaurar roteiro ♡</button></div>
+    </div>
+  </dialog>
   <dialog id="manual-itinerary-dialog" class="manual-itinerary-dialog" aria-labelledby="manual-itinerary-title">
     <form id="manual-itinerary-form" class="manual-itinerary-form" novalidate>
       <div class="upload-heading">
@@ -366,10 +373,11 @@
         <label>Data<input name="manual_data" type="date" required /></label>
         <label>Cidade<input name="manual_cidade" required minlength="2" maxlength="100" /></label>
         <label>Horário de início<input name="manual_inicio" type="time" required /></label>
+        <label>Horário de término<input name="manual_fim" type="time" required /></label>
         <label>Transporte<input name="manual_transporte" required maxlength="60" placeholder="Ex.: a pé, carro ou aplicativo" /></label>
         <label class="span-2">Descrição<textarea name="manual_descricao" required maxlength="1000" rows="3"></textarea></label>
       </div>
-      <div class="manual-steps-heading"><h3>Etapas do passeio</h3><button id="manual-add-step" class="button outline" type="button">Adicionar etapa +</button></div>
+      <div class="manual-steps-heading"><h3>Etapas do passeio</h3><div class="manual-step-tools"><button id="manual-import-open" class="button outline manual-import-button" type="button">Importar roteiro ♡</button><input id="manual-import-file" class="visually-hidden" type="file" accept=".json,application/json" aria-label="Selecionar arquivo JSON do roteiro" /><button id="manual-add-step" class="button outline" type="button">Adicionar etapa +</button></div></div>
       <p id="manual-step-limit" class="form-help">Adicione de 1 a 30 etapas. As informações são preenchidas por você.</p>
       <div id="manual-steps" class="manual-steps"></div>
       <p id="manual-itinerary-status" class="manual-itinerary-status" role="status" aria-live="polite"></p>

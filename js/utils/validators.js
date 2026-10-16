@@ -27,6 +27,15 @@ export function validateItinerary(value) {
 export function validateResponse(path, data) {
   if (path === "ai") return validateItinerary(data);
   if (path === "memoriaCreate") return data;
+  if (path === "manualItineraryCreate") {
+    if (!object(data) || data.success !== true || !object(data.encontro) ||
+      data.encontro.id == null || !text(data.encontro.titulo) || !isDate(data.encontro.data_encontro) ||
+      !object(data.roteiro) || data.roteiro.encontro_id !== data.encontro.id ||
+      !object(data.roteiro.dados_json))
+      throw new Error("O serviço não confirmou o cadastro do encontro.");
+    validateItinerary(data.roteiro.dados_json);
+    return data;
+  }
   if (["photoDelete", "memoryDelete"].includes(path)) {
     if (!object(data) || data.success !== true || typeof data.deleted !== "boolean")
       throw new Error("O serviÃ§o nÃ£o confirmou a exclusÃ£o.");

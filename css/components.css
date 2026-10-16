@@ -1244,3 +1244,11 @@ footer p {
 .copy-command-row { display: flex; gap: 8px; }
 .copy-command-row .button { min-height: 42px; flex: 0 0 auto; }
 .copy-command-row input { font: 11px/1.4 monospace; }
+
+.manual-step-tools { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.manual-import-button { min-height: 40px; padding-inline: 13px; font-size: 11px; }
+.manual-import-confirm { width: min(480px, calc(100% - 28px)); }
+.manual-import-confirm-content { display: grid; gap: 14px; padding: clamp(20px, 5vw, 30px); }
+.manual-import-confirm-content h2 { margin: 0; font: 26px/1.2 var(--font-title); }
+.manual-import-confirm-content p { margin: 0; color: var(--color-gray); font-size: 13px; line-height: 1.6; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }

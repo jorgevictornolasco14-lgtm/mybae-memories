@@ -62,6 +62,33 @@ class FrontendTests(unittest.TestCase):
             value = self.responses.get('memorias_create', (201, body))
             if isinstance(value, tuple) and value[0] == 201:
                 self.responses['memorias'] = [body]
+        elif name == 'encontros' and route.request.method == 'POST':
+            body = route.request.post_data_json
+            etapa_data = [{
+                'ordem': item['ordem'], 'nome': item['nome'], 'horario': item['horario'],
+                'descricao': item['descricao'], 'busca': item['endereco'] or item['nome'],
+                'endereco_sugerido': item['endereco'] or item['nome'],
+                'tipo_atividade': body['tipo_passeio'], 'custo_estimado': None,
+            } for item in body['etapas']]
+            dados = {
+                'titulo': body['titulo'], 'descricao': body['descricao'], 'resumo': body['descricao'],
+                'cidade': body['cidade'], 'data': body['data_encontro'], 'inicio': body['horario_inicio'],
+                'fim': body['horario_fim'], 'chuva': '', 'plano_alternativo_chuva': '', 'alimentacao': '',
+                'custos': '', 'observacoes': 'Cronograma manual.', 'recomendacoes': [],
+                'tipo_passeio': body['tipo_passeio'], 'transporte': body['transporte'], 'etapas': etapa_data,
+            }
+            meeting = {
+                'id': 'created-meeting', 'titulo': body['titulo'], 'data_encontro': body['data_encontro'],
+                'horario_inicio': body['horario_inicio'], 'horario_fim': body['horario_fim'],
+                'cidade': body['cidade'], 'local': body['etapas'][0]['nome'],
+                'endereco': body['etapas'][0]['endereco'], 'descricao': body['descricao'],
+                'status': 'Planejado',
+            }
+            itinerary = {'id': 'created-itinerary', 'encontro_id': meeting['id'], 'titulo': body['titulo'], 'dados_json': dados}
+            value = self.responses.get('encontros_create', (201, {'success': True, 'encontro': meeting, 'roteiro': itinerary}))
+            if isinstance(value, tuple) and value[0] == 201:
+                self.responses['encontros'] = [*self.responses.get('encontros', []), meeting]
+                self.responses['roteiros'] = [*self.responses.get('roteiros', []), itinerary]
         else:
             value = self.responses.get(name, [])
         if isinstance(value, tuple):
@@ -262,7 +289,7 @@ class FrontendTests(unittest.TestCase):
         photo_delete.click()
         self.page.locator('#content-delete-confirm').click()
         expect(self.page.locator('.photo-card')).to_have_count(0)
-        self.assertEqual(self.page.locator('#gallery-delete-feedback').get_attribute('hidden'), None)
+        expect(self.page.locator('#gallery-delete-feedback')).to_be_visible()
         photo_request = next(req for name, req in self.requests if name == 'galeria' and req.method == 'DELETE')
         self.assertEqual(photo_request.url.split('id=', 1)[1], photo_id)
         self.assertEqual(photo_request.headers.get('x-admin-capability'), 'A' * 43)
@@ -483,7 +510,83 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(request.method, 'POST')
         self.assertEqual(request.post_data_json['cidade'], 'Belo Horizonte, MG')
 
-    def test_manual_itinerary_steps_reorder_remove_preview_and_backend_save_limit(self):
+    def manual_import_document(self, count=7, *, missing=None):
+        fields = [
+            {"name": "manual_titulo", "value": "Roteiro restaurado"},
+            {"name": "manual_data", "value": "2027-01-15"},
+            {"name": "manual_cidade", "value": "Belo Horizonte"},
+            {"name": "manual_inicio", "value": "08:00"},
+            {"name": "manual_fim", "value": "22:00"},
+            {"name": "manual_transporte", "value": "A p\u00e9"},
+            {"name": "manual_descricao", "value": "Um dia especial restaurado do arquivo."},
+        ]
+        for i in range(count):
+            fields.extend([
+                {"name": "manual_horario", "value": f"{8 + i:02d}:00"},
+                {"name": "manual_nome", "value": f"Local {i + 1}"},
+                {"name": "manual_etapa_descricao", "value": f"Descri\u00e7\u00e3o da etapa {i + 1}."},
+                {"name": "manual_endereco", "value": f"Rua de teste {i + 1}, 100"},
+                {"name": "manual_fotografia", "value": f"foto-antiga-{i + 1}.jpg"},
+            ])
+        if missing:
+            fields = [field for field in fields if field['name'] != missing]
+        fields.append({"name": "campo_desconhecido", "value": "ignorar com seguran\u00e7a"})
+        return {"salvoEm": "2026-10-15T12:00:00.000Z", "campos": fields}
+
+    def import_manual_file(self, document):
+        content = json.dumps(document, ensure_ascii=False).encode('utf-8')
+        self.page.locator('#manual-import-file').set_input_files({
+            'name': 'meu-roteiro-mybae.json', 'mimeType': 'application/json', 'buffer': content,
+        })
+
+    def test_manual_import_restores_seven_steps_repeated_fields_and_preview(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.import_manual_file(self.manual_import_document())
+        expect(self.page.locator('#manual-import-confirm')).to_be_visible()
+        self.page.locator('#manual-import-apply').click()
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Seu roteiro foi restaurado com sucesso')
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('fotografias precisam ser selecionadas novamente')
+        self.assertEqual(self.page.locator('#manual-steps .manual-step').count(), 7)
+        form = self.page.locator('#manual-itinerary-form')
+        self.assertEqual(form.locator('[name=manual_titulo]').input_value(), 'Roteiro restaurado')
+        self.assertEqual(form.locator('[name=manual_transporte]').input_value(), 'A p\u00e9')
+        self.assertEqual(form.locator('.manual-step [name=manual_horario]').nth(6).input_value(), '14:00')
+        self.assertEqual(form.locator('.manual-step [name=manual_etapa_descricao]').nth(3).input_value(), 'Descri\u00e7\u00e3o da etapa 4.')
+        self.assertEqual(form.locator('.manual-step [name=manual_endereco]').nth(2).input_value(), 'Rua de teste 3, 100')
+        self.assertTrue(self.page.locator('#manual-step-limit').inner_text().startswith('7 de 30'))
+        self.page.locator('#manual-preview').click()
+        expect(self.page.locator('.itinerary-steps .itinerary-step')).to_have_count(7)
+        expect(self.page.locator('.itinerary-step').nth(3)).to_contain_text('Descri\u00e7\u00e3o da etapa 4.')
+        self.assertEqual(self.page.locator('.itinerary-step time').nth(6).inner_text(), '14:00')
+
+    def test_manual_import_invalid_json_missing_fields_and_more_than_30_steps(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        self.page.locator('#manual-import-file').set_input_files({
+            'name': 'malformado.json', 'mimeType': 'application/json', 'buffer': b'{not json',
+        })
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('JSON v')
+        self.import_manual_file(self.manual_import_document(missing='manual_cidade'))
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('falta manual_cidade')
+        self.import_manual_file(self.manual_import_document(31))
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('de 1 a 30 etapas')
+        self.assertEqual(self.page.locator('#manual-steps .manual-step').count(), 1)
+
+    def test_manual_import_cancel_keeps_existing_form_unchanged(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        form = self.page.locator('#manual-itinerary-form')
+        form.locator('[name=manual_titulo]').fill('Conte\u00fado atual')
+        form.locator('.manual-step [name=manual_nome]').fill('Etapa atual')
+        self.import_manual_file(self.manual_import_document())
+        self.page.locator('#manual-import-cancel').click()
+        self.assertFalse(self.page.locator('#manual-import-confirm').is_visible())
+        self.assertEqual(form.locator('[name=manual_titulo]').input_value(), 'Conte\u00fado atual')
+        self.assertEqual(form.locator('.manual-step [name=manual_nome]').input_value(), 'Etapa atual')
+        self.assertEqual(self.page.locator('#manual-steps .manual-step').count(), 1)
+
+    def test_manual_itinerary_steps_reorder_remove_preview_and_save_to_backend(self):
         self.open()
         self.page.locator('#manual-itinerary-open').click()
         expect(self.page.locator('#manual-itinerary-dialog')).to_be_visible()
@@ -493,6 +596,7 @@ class FrontendTests(unittest.TestCase):
         form.locator('[name=manual_data]').fill(today)
         form.locator('[name=manual_cidade]').fill('Belo Horizonte')
         form.locator('[name=manual_inicio]').fill('09:00')
+        form.locator('[name=manual_fim]').fill('12:00')
         form.locator('[name=manual_transporte]').fill('A pé')
         form.locator('[name=manual_descricao]').fill('Um encontro montado por nós.')
         first = self.page.locator('.manual-step').first
@@ -515,19 +619,65 @@ class FrontendTests(unittest.TestCase):
         self.page.locator('.manual-step').nth(2).locator('[data-action=remove]').click()
         self.page.locator('.manual-step').nth(1).locator('[data-action=up]').click()
         expect(self.page.locator('.manual-step').first.locator('.manual-step-number')).to_have_text('Etapa 1')
-        self.page.locator('#manual-save').click()
-        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('não aceita POST /api/encontros')
-        self.assertFalse(any(name == 'encontros' and request.method == 'POST' for name, request in self.requests))
-        expect(self.page.locator('#manual-itinerary-dialog')).to_be_visible()
-        self.page.locator('#manual-preview').click()
-        expect(self.page.locator('#manual-itinerary-dialog')).to_be_hidden()
+        self.page.locator('.manual-step').first.locator('[name=manual_horario]').fill('09:00')
+        self.page.locator('.manual-step').nth(1).locator('[name=manual_horario]').fill('11:00')
+        self.page.locator('#manual-save').evaluate('(button) => { button.click(); button.click(); }')
+        expect(self.page.locator('#manual-itinerary-status')).to_contain_text('Encontro salvo e publicado')
+        request = next(request for name, request in self.requests if name == 'encontros' and request.method == 'POST')
+        body = request.post_data_json
+        self.assertEqual(body['titulo'], 'Nosso Rolê')
+        self.assertEqual(body['horario_fim'], '12:00')
+        self.assertEqual([stage['ordem'] for stage in body['etapas']], [1, 2])
+        self.assertEqual(len([request for name, request in self.requests if name == 'encontros' and request.method == 'POST']), 1)
+        self.assertTrue(all(not any(value.startswith('blob:') for value in stage.values() if isinstance(value, str)) for stage in body['etapas']))
+        self.assertFalse(any(name == 'galeria' and request.method == 'POST' for name, request in self.requests))
+        self.page.locator('#manual-itinerary-close').click()
+        expect(self.page.locator(f'#calendar-days [data-date="{today}"]')).to_have_class(re.compile('has-event'))
+        self.page.locator(f'#calendar-days [data-date="{today}"]').click()
+        expect(self.page.locator('#event-details-dialog')).to_be_visible()
+        expect(self.page.locator('#event-dialog-list')).to_contain_text('Nosso Rolê')
+        self.page.locator('#event-dialog-list .event-dialog-route').click()
+        expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso Rolê')
         expect(self.page.locator('.itinerary-title h3')).to_have_text('Nosso Rolê')
         expect(self.page.locator('.itinerary-title')).to_contain_text('Transporte: A pé')
         expect(self.page.locator('.itinerary-step')).to_have_count(2)
         expect(self.page.locator('.itinerary-step').first.locator('h4')).to_have_text('Despedida')
-        expect(self.page.locator('.itinerary-step').nth(1).locator('img')).to_have_attribute('src', re.compile('^blob:'))
-        self.page.locator('#view-poster').click()
-        expect(self.page.locator('.itinerary-paper')).to_have_class(re.compile('poster-mode'))
+        expect(self.page.locator('.itinerary-step img')).to_have_count(0)
+
+    def test_manual_itinerary_server_errors_keep_the_form_and_do_not_confirm_save(self):
+        self.open()
+        self.page.locator('#manual-itinerary-open').click()
+        form = self.page.locator('#manual-itinerary-form')
+        today = self.page.evaluate("async () => (await import('/js/utils/dates.js')).todayKey()")
+        form.locator('[name=manual_titulo]').fill('Encontro para guardar')
+        form.locator('[name=manual_data]').fill(today)
+        form.locator('[name=manual_cidade]').fill('Belo Horizonte')
+        form.locator('[name=manual_inicio]').fill('09:00')
+        form.locator('[name=manual_fim]').fill('12:00')
+        form.locator('[name=manual_transporte]').fill('Carro')
+        form.locator('[name=manual_descricao]').fill('Descrição que deve ser preservada.')
+        stage = self.page.locator('.manual-step').first
+        stage.locator('[name=manual_horario]').fill('09:00')
+        stage.locator('[name=manual_nome]').fill('Primeira parada')
+        stage.locator('[name=manual_etapa_descricao]').fill('Descrição da primeira etapa.')
+        stage.locator('[name=manual_endereco]').fill('Centro, Belo Horizonte')
+        self.page.locator('#manual-add-step').click()
+        stage = self.page.locator('.manual-step').nth(1)
+        stage.locator('[name=manual_horario]').fill('11:00')
+        stage.locator('[name=manual_nome]').fill('Segunda parada')
+        stage.locator('[name=manual_etapa_descricao]').fill('Descrição da segunda etapa.')
+        stage.locator('[name=manual_endereco]').fill('Savassi, Belo Horizonte')
+        for status_code, expected in [
+            (400, 'campos e horários'), (413, 'excede o limite'), (429, 'limite de cadastros'),
+            (500, 'servidor não conseguiu salvar'), (503, 'temporariamente indisponível'),
+            (200, 'HTTP 200'),
+        ]:
+            self.responses['encontros_create'] = (status_code, {'error': 'mock error'})
+            self.page.locator('#manual-save').click()
+            expect(self.page.locator('#manual-itinerary-status')).to_contain_text(expected)
+            expect(self.page.locator('#manual-save')).to_be_enabled()
+        expect(form.locator('[name=manual_titulo]')).to_have_value('Encontro para guardar')
+        self.assertFalse(any(name == 'encontros' and request.method == 'GET' and '/api/encontros?' in request.url for name, request in self.requests))
 
     def test_planner_malformed_and_rate_limit(self):
         self.responses['ai'] = {'titulo': 'Inválido'}

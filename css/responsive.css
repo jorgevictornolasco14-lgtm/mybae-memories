@@ -568,3 +568,10 @@
     grid-template-columns: 80px minmax(0, 1fr);
   }
 }
+
+@media (max-width: 640px) {
+  .manual-step-tools { width: 100%; justify-content: stretch; }
+  .manual-step-tools .button { flex: 1 1 130px; min-height: 44px; }
+  .manual-import-confirm-content .manual-form-actions { flex-direction: column-reverse; }
+  .manual-import-confirm-content .manual-form-actions .button { width: 100%; min-height: 46px; }
+}

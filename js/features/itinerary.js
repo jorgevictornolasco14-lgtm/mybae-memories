@@ -146,6 +146,7 @@ export function initItinerary() {
     setItinerary,
     async showForEvent(id) {
       await ready;
+      published = await api("roteiros", { cache: "no-store" });
       const row = published.find((r) => String(r.encontro_id) === String(id));
       if (!row)
         throw new Error("Ainda não há roteiro publicado para este encontro.");

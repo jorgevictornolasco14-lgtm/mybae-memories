@@ -1,7 +1,7 @@
 import { CONFIG, ENDPOINTS } from "./config.js";
 import { validateResponse } from "./utils/validators.js";
 const pending = new Map();
-export function api(name, { method = ENDPOINTS[name]?.method, body, query, headers = {}, cache = "default", expectedStatus } = {}) {
+export function api(name, { method = ENDPOINTS[name]?.method, body, query, headers = {}, cache = "default", expectedStatus, errorMessages } = {}) {
   const endpoint = ENDPOINTS[name];
   if (!endpoint || method !== endpoint.method) return Promise.reject(new Error("Operação indisponível."));
   if (!CONFIG.API_BASE_URL.trim()) return Promise.reject(Object.assign(new Error("Nosso álbum ainda não está conectado. Tente novamente em breve."), { status: 503 }));
@@ -18,7 +18,7 @@ export function api(name, { method = ENDPOINTS[name]?.method, body, query, heade
     }
     url = target.href;
   } catch { return Promise.reject(new Error("O endereço do serviço está inválido. Verifique a configuração do site.")); }
-  const key = JSON.stringify([url, method, body, headers, cache, expectedStatus]);
+  const key = JSON.stringify([url, method, body, headers, cache, expectedStatus, errorMessages]);
   if (pending.has(key)) return pending.get(key);
   const request = (async () => {
     const controller = new AbortController();
@@ -33,13 +33,13 @@ export function api(name, { method = ENDPOINTS[name]?.method, body, query, heade
       if (!response.ok) {
         let code;
         try { code = (await response.clone().json())?.code; } catch { /* Non-JSON error body. */ }
-        const message = response.status === 429 ? "Muitas solicitações. Aguarde um pouco e tente novamente." :
+        const message = errorMessages?.[response.status] || (response.status === 429 ? "Muitas solicitações. Aguarde um pouco e tente novamente." :
           response.status === 503 ? "O serviço está temporariamente indisponível. Tente novamente em breve." :
-            "Não foi possível concluir a solicitação. Tente novamente.";
+            "Não foi possível concluir a solicitação. Tente novamente.");
         throw Object.assign(new Error(message), { status: response.status, code });
       }
       if (expectedStatus && response.status !== expectedStatus) {
-        throw Object.assign(new Error(`O serviço respondeu HTTP ${response.status}; a memória só é confirmada com HTTP ${expectedStatus}.`), { status: response.status });
+        throw Object.assign(new Error(`O serviço respondeu HTTP ${response.status}; esta operação só é confirmada com HTTP ${expectedStatus}.`), { status: response.status });
       }
       let data;
       try {

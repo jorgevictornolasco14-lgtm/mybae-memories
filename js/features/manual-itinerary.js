@@ -1,7 +1,10 @@
 import { $, todayKey } from "../components/ui.js";
 import { isDate, validateItinerary } from "../utils/validators.js";
+import { api } from "../api.js";
+import { parseManualItineraryImport } from "./manual-itinerary-import.js";
 
 const MAX_STEPS = 30;
+const MAX_PUBLISHED_STEPS = 9;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -11,8 +14,24 @@ export function initManualItinerary(setItinerary) {
   const steps = $("#manual-steps");
   const addButton = $("#manual-add-step");
   const status = $("#manual-itinerary-status");
+  const saveButton = $("#manual-save");
+  const importButton = $("#manual-import-open");
+  const importFile = $("#manual-import-file");
+  const importConfirm = $("#manual-import-confirm");
+  let pendingImport = null;
   let serial = 0;
+  let saving = false;
+  let saved = false;
   const photoUrls = new WeakMap();
+
+  function unlockSavedSubmission() {
+    if (!saved) return;
+    saved = false;
+    saveButton.disabled = false;
+    saveButton.textContent = "Guardar nosso encontro ♡";
+    status.textContent = "";
+    status.classList.remove("error");
+  }
 
   function stepField(label, name, type = "text", attrs = {}) {
     const wrapper = document.createElement("label");
@@ -103,7 +122,7 @@ export function initManualItinerary(setItinerary) {
   function buildItinerary() {
     if (!form.reportValidity()) return null;
     const data = Object.fromEntries([["titulo", "manual_titulo"], ["data_encontro", "manual_data"],
-      ["cidade", "manual_cidade"], ["horario_inicio", "manual_inicio"], ["transporte", "manual_transporte"]]
+      ["cidade", "manual_cidade"], ["horario_inicio", "manual_inicio"], ["horario_fim", "manual_fim"], ["transporte", "manual_transporte"]]
       .map(([key, name]) => [key, form.elements[name].value]));
     data.descricao = form.elements.manual_descricao.value;
     const itinerarySteps = [...steps.querySelectorAll(".manual-step")].map((row) => {
@@ -131,12 +150,17 @@ export function initManualItinerary(setItinerary) {
     if (!itinerarySteps.length || itinerarySteps.length > MAX_STEPS) {
       throw new Error(`Adicione de 1 a ${MAX_STEPS} etapas para visualizar o roteiro.`);
     }
+    if (data.horario_fim <= data.horario_inicio || itinerarySteps.some((step, index) =>
+      step.horario < data.horario_inicio || step.horario >= data.horario_fim ||
+      (index > 0 && step.horario < itinerarySteps[index - 1].horario))) {
+      throw new Error("Confira o horário de término e a ordem dos horários das etapas.");
+    }
     return validateItinerary({
       titulo: data.titulo.trim(),
       cidade: data.cidade.trim(),
       data: data.data_encontro,
       inicio: data.horario_inicio,
-      fim: itinerarySteps[itinerarySteps.length - 1].horario,
+      fim: data.horario_fim,
       descricao: data.descricao.trim(),
       transporte: data.transporte.trim(),
       chuva: "",
@@ -170,7 +194,56 @@ export function initManualItinerary(setItinerary) {
     dialog.showModal();
     form.elements.manual_titulo.focus();
   });
+  importButton.addEventListener("click", () => {
+    importFile.value = "";
+    importFile.click();
+  });
+  importFile.addEventListener("change", async () => {
+    const file = importFile.files?.[0];
+    if (!file) return;
+    status.textContent = "";
+    status.classList.remove("error");
+    try {
+      if (!file.name.toLowerCase().endsWith(".json")) throw new Error("Selecione um arquivo com extensão .json.");
+      if (file.size > 256 * 1024) throw new Error("O arquivo JSON excede o limite de 256 KB.");
+      const imported = parseManualItineraryImport(await file.text());
+      pendingImport = imported;
+      importConfirm.showModal();
+      $("#manual-import-apply").focus();
+    } catch (error) {
+      status.textContent = error.message || "Não foi possível ler esse roteiro.";
+      status.classList.add("error");
+    }
+  });
+  function cancelImport() {
+    pendingImport = null;
+    importFile.value = "";
+  }
+  $("#manual-import-cancel").addEventListener("click", () => importConfirm.close());
+  importConfirm.addEventListener("cancel", cancelImport);
+  importConfirm.addEventListener("close", cancelImport);
+  $("#manual-import-apply").addEventListener("click", () => {
+    if (!pendingImport) return;
+    const imported = pendingImport;
+    form.reset();
+    for (const name of ["manual_titulo", "manual_data", "manual_cidade", "manual_inicio", "manual_fim", "manual_transporte", "manual_descricao"])
+      form.elements[name].value = imported[name];
+    steps.replaceChildren();
+    imported.steps.forEach((step) => addStep(step));
+    updateStepControls();
+    saved = false;
+    saveButton.disabled = false;
+    saveButton.textContent = "Guardar nosso encontro ♡";
+    status.classList.remove("error");
+    status.textContent = imported.photoFilesNeedReselection
+      ? "Seu roteiro foi restaurado com sucesso ♡ As fotografias precisam ser selecionadas novamente."
+      : "Seu roteiro foi restaurado com sucesso ♡ As fotografias precisam ser selecionadas novamente caso queira adicioná-las.";
+    importConfirm.close();
+    form.elements.manual_titulo.focus();
+  });
   $("#manual-itinerary-close").addEventListener("click", () => dialog.close());
+  form.addEventListener("input", unlockSavedSubmission);
+  form.addEventListener("change", unlockSavedSubmission);
   dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
   addButton.addEventListener("click", () => addStep());
   steps.addEventListener("click", (event) => {
@@ -183,18 +256,85 @@ export function initManualItinerary(setItinerary) {
     updateStepControls();
   });
   $("#manual-preview").addEventListener("click", preview);
-  $("#manual-save").addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
+    if (saving || saved) return;
     status.textContent = "";
     status.classList.remove("error");
+    let itinerary;
     try {
-      if (!buildItinerary()) return;
+      itinerary = buildItinerary();
+      if (!itinerary) return;
+      if (itinerary.etapas.length < 2) throw new Error("Adicione pelo menos duas etapas para guardar o encontro.");
+      if (itinerary.etapas.length > MAX_PUBLISHED_STEPS)
+        throw new Error(`O backend permite publicar até ${MAX_PUBLISHED_STEPS} etapas por encontro. Remova algumas etapas antes de guardar.`);
     } catch (error) {
       status.classList.add("error");
       status.textContent = error.message;
       return;
     }
-    status.classList.add("error");
-    status.textContent = "O backend publicado ainda não aceita POST /api/encontros (respondeu Allow: GET). Nada foi salvo. Seus dados continuam no formulário; é necessária uma rota de cadastro no backend para guardar e atualizar o calendário.";
+    const transport = itinerary.transporte.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    const transportMap = transport.includes("aplic") || transport.includes("uber") || transport.includes("99") ? "Aplicativo"
+      : transport.includes("transporte") || transport.includes("onibus") || transport.includes("metro") ? "Transporte público"
+        : transport.includes("carro") ? "Carro"
+          : transport === "a pe" || transport.includes("caminh") ? "A pé" : null;
+    if (!transportMap) {
+      status.classList.add("error");
+      status.textContent = "Informe transporte como A pé, Carro, Transporte público ou Aplicativo.";
+      return;
+    }
+    const payload = {
+      titulo: itinerary.titulo,
+      cidade: itinerary.cidade,
+      data_encontro: itinerary.data,
+      horario_inicio: itinerary.inicio,
+      horario_fim: itinerary.fim,
+      descricao: itinerary.descricao,
+      tipo_passeio: "Personalizado",
+      transporte: transportMap,
+      etapas: itinerary.etapas.map((stage, index) => ({
+        ordem: index + 1,
+        horario: stage.horario,
+        nome: stage.nome,
+        descricao: stage.descricao,
+        endereco: stage.busca,
+      })),
+    };
+    const hasPhotos = [...steps.querySelectorAll('[name="manual_fotografia"]')].some((input) => input.files?.length);
+    saving = true;
+    saveButton.disabled = true;
+    saveButton.setAttribute("aria-busy", "true");
+    status.textContent = "Guardando seu encontro…";
+    try {
+      const result = await api("manualItineraryCreate", {
+        body: payload,
+        cache: "no-store",
+        expectedStatus: 201,
+        errorMessages: {
+          400: "Confira os campos e horários do encontro. Seus dados continuam no formulário.",
+          413: "O roteiro excede o limite aceito pelo servidor. Reduza o texto ou as etapas.",
+          429: "O limite de cadastros foi atingido. Aguarde um pouco e tente novamente.",
+          500: "O servidor não conseguiu salvar o encontro. Seus dados continuam no formulário.",
+          503: "O serviço está temporariamente indisponível. Seus dados continuam no formulário; tente novamente mais tarde.",
+        },
+      });
+      setItinerary(hasPhotos ? itinerary : result.roteiro.dados_json, false);
+      saved = true;
+      saveButton.textContent = "Encontro guardado ✓";
+      status.classList.remove("error");
+      status.textContent = hasPhotos
+        ? "Encontro salvo e publicado. As fotografias escolhidas aparecem somente na prévia local; não enviamos URLs temporárias como imagens permanentes."
+        : "Encontro salvo e publicado. A agenda foi atualizada; selecione a data para ver os detalhes.";
+      window.dispatchEvent(new CustomEvent("mybae:meeting-created", {
+        detail: { id: result.encontro.id, date: result.encontro.data_encontro },
+      }));
+    } catch (error) {
+      status.classList.add("error");
+      status.textContent = error.message || "Não foi possível salvar. Seus dados continuam no formulário.";
+    } finally {
+      saving = false;
+      saveButton.removeAttribute("aria-busy");
+      if (!saved) saveButton.disabled = false;
+    }
   });
   addStep();
   form.elements.manual_data.min = todayKey();
