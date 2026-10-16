@@ -9,15 +9,17 @@ import { initAnimations } from "./components/animations.js";
 import { initSettings } from "./features/settings.js";
 import { initMusicPlayer } from "./features/music-player.js";
 import { initManualItinerary } from "./features/manual-itinerary.js";
+import { initAdminDeletion } from "./features/admin-delete.js";
 initNavbar();
 initMusicPlayer();
+const adminDeletion = initAdminDeletion();
 $('#planner-form [name="data"]').min = todayKey();
 const itineraries = initItinerary();
 initManualItinerary(itineraries.setItinerary);
 initAnimations();
-const galleryReady = initGallery();
+const galleryReady = initGallery(adminDeletion);
 initGalleryUpload(async () => (await galleryReady)());
-const refreshMemories = initMemories();
+const refreshMemories = initMemories(adminDeletion);
 initMemoryCreate(refreshMemories);
 await Promise.allSettled([
   galleryReady,

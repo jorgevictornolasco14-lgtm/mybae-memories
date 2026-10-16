@@ -50,9 +50,14 @@ class FrontendTests(unittest.TestCase):
         self.assertEqual(self.errors, [], 'Uncaught browser errors')
 
     def mock_api(self, route):
-        name = route.request.url.rsplit('/', 1)[-1]
+        name = route.request.url.split('?', 1)[0].rstrip('/').rsplit('/', 1)[-1]
         self.requests.append((name, route.request))
-        if name == 'memorias' and route.request.method == 'POST':
+        if name in ('galeria', 'memorias') and route.request.method == 'DELETE':
+            value = self.responses.get(f'{name}_delete', (200, {'success': True, 'deleted': True}))
+            if isinstance(value, tuple) and value[0] == 200 and value[1].get('deleted') is True:
+                target_id = route.request.url.split('id=', 1)[1].split('&', 1)[0] if name == 'galeria' else route.request.post_data_json.get('id')
+                self.responses[name] = [row for row in self.responses.get(name, []) if str(row.get('id')) != str(target_id)]
+        elif name == 'memorias' and route.request.method == 'POST':
             body = route.request.post_data_json
             value = self.responses.get('memorias_create', (201, body))
             if isinstance(value, tuple) and value[0] == 201:
@@ -89,7 +94,8 @@ class FrontendTests(unittest.TestCase):
         self.assertFalse((ROOT/'admin.html').exists())
         self.assertNotIn('/admin', html)
         self.open()
-        self.assertEqual(self.page.locator('input[type=password]').count(), 0)
+        self.assertEqual(self.page.locator('input[type=password]').count(), 1)
+        self.assertEqual(self.page.locator('#admin-capability-token').count(), 1)
         self.assertTrue(all('admin' not in name for name, _ in self.requests))
 
     def test_gallery_upload_modal_preview_validation_and_publish_refresh(self):
@@ -224,6 +230,70 @@ class FrontendTests(unittest.TestCase):
         self.page.keyboard.press('Escape')
         expect(self.page.locator('#lightbox')).not_to_be_visible()
         expect(self.page.locator('.photo-card').first).to_be_focused()
+
+    def test_admin_delete_capabilities_confirmation_cancel_success_and_refresh(self):
+        photo_id = 'a9caaf82-85b2-4d54-9467-09c0dcd00001'
+        memory_id = 'a9caaf82-85b2-4d54-9467-09c0dcd00002'
+        self.responses['galeria'] = [{'id': photo_id, 'imagem_url': '/assets/images/flowers.jpg', 'legenda': 'Foto protegida', 'data_foto': '2026-10-15'}]
+        self.responses['memorias'] = [{'id': memory_id, 'titulo': 'Memória protegida', 'data_memoria': '2026-10-15', 'descricao': 'Uma lembrança.'}]
+        self.open()
+        expect(self.page.locator('.memory-card')).to_have_count(1)
+        expect(self.page.locator('.content-delete-button')).to_have_count(0)
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+
+        self.page.locator('#gallery-authorize-delete').click()
+        expect(self.page.locator('#admin-capability-dialog')).to_be_visible()
+        self.page.locator('#admin-capability-item').select_option(photo_id)
+        expect(self.page.locator('#admin-capability-command')).to_have_value(re.compile(photo_id))
+        self.page.locator('#admin-capability-token').fill('A' * 43)
+        self.page.locator('#admin-capability-submit').click()
+        photo_delete = self.page.locator('.photo-card-shell .content-delete-button')
+        expect(photo_delete).to_have_accessible_name('Excluir fotografia')
+        self.assertEqual(self.page.locator('.memory-card .content-delete-button').count(), 0)
+        box = photo_delete.bounding_box()
+        self.assertGreaterEqual(box['x'], 0)
+        self.assertLessEqual(box['x'] + box['width'], 390)
+        photo_delete.click()
+        expect(self.page.locator('#content-delete-dialog')).to_be_visible()
+        expect(self.page.locator('#content-delete-title')).to_contain_text('Tem certeza que deseja apagar essa lembrança?')
+        self.page.locator('#content-delete-cancel').click()
+        expect(self.page.locator('.photo-card')).to_have_count(1)
+        self.assertFalse(any(name == 'galeria' and req.method == 'DELETE' for name, req in self.requests))
+        photo_delete.click()
+        self.page.locator('#content-delete-confirm').click()
+        expect(self.page.locator('.photo-card')).to_have_count(0)
+        self.assertEqual(self.page.locator('#gallery-delete-feedback').get_attribute('hidden'), None)
+        photo_request = next(req for name, req in self.requests if name == 'galeria' and req.method == 'DELETE')
+        self.assertEqual(photo_request.url.split('id=', 1)[1], photo_id)
+        self.assertEqual(photo_request.headers.get('x-admin-capability'), 'A' * 43)
+
+        self.page.locator('#memory-authorize-delete').click()
+        self.page.locator('#admin-capability-item').select_option(memory_id)
+        self.page.locator('#admin-capability-token').fill('B' * 43)
+        self.page.locator('#admin-capability-submit').click()
+        memory_delete = self.page.locator('.memory-card .content-delete-button')
+        expect(memory_delete).to_have_accessible_name('Excluir memória')
+        memory_delete.click()
+        self.page.locator('#content-delete-confirm').click()
+        expect(self.page.locator('.memory-card')).to_have_count(0)
+        memory_request = next(req for name, req in self.requests if name == 'memorias' and req.method == 'DELETE')
+        self.assertEqual(memory_request.post_data_json, {'id': memory_id})
+        self.assertEqual(memory_request.headers.get('x-admin-capability'), 'B' * 43)
+
+    def test_admin_delete_failure_keeps_card_and_consumes_temporary_capability(self):
+        photo_id = 'a9caaf82-85b2-4d54-9467-09c0dcd00003'
+        self.responses['galeria'] = [{'id': photo_id, 'imagem_url': '/assets/images/park.jpg', 'legenda': 'Foto permanece', 'data_foto': '2026-10-15'}]
+        self.responses['galeria_delete'] = (503, {'error': 'temporariamente indisponível'})
+        self.open()
+        self.page.locator('#gallery-authorize-delete').click()
+        self.page.locator('#admin-capability-item').select_option(photo_id)
+        self.page.locator('#admin-capability-token').fill('C' * 43)
+        self.page.locator('#admin-capability-submit').click()
+        self.page.locator('.photo-card-shell .content-delete-button').click()
+        self.page.locator('#content-delete-confirm').click()
+        expect(self.page.locator('#content-delete-status')).to_contain_text('temporariamente indisponível')
+        expect(self.page.locator('.photo-card')).to_have_count(1)
+        expect(self.page.locator('.content-delete-button')).to_have_count(0)
 
     def test_calendar_multiple_events_navigation_and_focus(self):
         self.open()

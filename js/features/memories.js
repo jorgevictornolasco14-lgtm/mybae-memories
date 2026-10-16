@@ -8,7 +8,7 @@ function dateParts(value) {
   return { year, month: monthName, day: String(day).padStart(2, "0") };
 }
 
-function memoryCard(row) {
+function memoryCard(row, deleteButton = null) {
   const card = document.createElement("article");
   card.className = "memory-card";
   const top = document.createElement("div");
@@ -32,6 +32,7 @@ function memoryCard(row) {
   heart.setAttribute("aria-hidden", "true");
   heart.textContent = "♡";
   top.append(time, heart);
+  if (deleteButton) top.append(deleteButton);
   const title = document.createElement("h3");
   title.textContent = row.titulo;
   card.append(top, title);
@@ -43,8 +44,44 @@ function memoryCard(row) {
   return card;
 }
 
-export function initMemories() {
+export function initMemories(adminDeletion) {
   const list = $("#memory-list");
+  let records = [];
+  function renderRows() {
+    records.sort((a, b) => b.data_memoria.localeCompare(a.data_memoria));
+    if (records.length) {
+      list.replaceChildren(...records.map((row) => memoryCard(row, adminDeletion?.createTrashButton(
+        "memoria", row, async (id) => {
+          records = records.filter((memory) => String(memory.id) !== String(id));
+          renderRows();
+          const feedback = $("#memory-delete-feedback");
+          try {
+            const latest = await api("memorias", { cache: "no-store" });
+            records = latest.filter((memory) => String(memory.id) !== String(id));
+            renderRows();
+            feedback.hidden = false;
+            feedback.textContent = "Memórias atualizadas após a confirmação do servidor.";
+          } catch {
+            feedback.hidden = false;
+            feedback.textContent = "Exclusão confirmada. A lista foi atualizada localmente; recarregue para consultar o servidor novamente.";
+          }
+        }, renderRows,
+      ))));
+    } else {
+      const empty = document.createElement("div");
+      empty.className = "empty-state memory-empty";
+      const icon = document.createElement("span");
+      icon.className = "empty-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "♡";
+      const title = document.createElement("h3");
+      title.textContent = "Toda história começa com um instante.";
+      const description = document.createElement("p");
+      description.textContent = "Guarde aqui o primeiro momento que fez vocês sorrirem.";
+      empty.append(icon, title, description);
+      list.replaceChildren(empty);
+    }
+  }
   async function refreshMemories() {
     list.setAttribute("aria-busy", "true");
     list.replaceChildren(Object.assign(document.createElement("p"), {
@@ -52,23 +89,8 @@ export function initMemories() {
       textContent: "Abrindo nosso livro de memórias…",
     }));
     try {
-      const rows = await api("memorias", { cache: "no-store" });
-      rows.sort((a, b) => b.data_memoria.localeCompare(a.data_memoria));
-      if (rows.length) list.replaceChildren(...rows.map(memoryCard));
-      else {
-        const empty = document.createElement("div");
-        empty.className = "empty-state memory-empty";
-        const icon = document.createElement("span");
-        icon.className = "empty-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "♡";
-        const title = document.createElement("h3");
-        title.textContent = "Toda história começa com um instante.";
-        const description = document.createElement("p");
-        description.textContent = "Guarde aqui o primeiro momento que fez vocês sorrirem.";
-        empty.append(icon, title, description);
-        list.replaceChildren(empty);
-      }
+      records = await api("memorias", { cache: "no-store" });
+      renderRows();
       return true;
     } catch (error) {
       const message = document.createElement("p");
@@ -86,6 +108,8 @@ export function initMemories() {
       return false;
     } finally { list.setAttribute("aria-busy", "false"); }
   }
+  $("#memory-authorize-delete").addEventListener("click", () =>
+    adminDeletion?.openAuthorization("memoria", records, renderRows));
   return refreshMemories;
 }
 

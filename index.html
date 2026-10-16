@@ -91,9 +91,11 @@
         </p>
       </div>
       <div class="memory-actions">
+        <button id="memory-authorize-delete" class="text-link delete-authorize" type="button">Autorizar exclusão temporária</button>
         <button id="memory-add" class="button primary" type="button">Adicionar memória ♡</button>
       </div>
       <p id="memory-feedback" class="memory-feedback" role="status" aria-live="polite" hidden></p>
+      <p id="memory-delete-feedback" class="memory-feedback" role="status" aria-live="polite" hidden></p>
       <div id="memory-list" class="memory-grid" aria-live="polite" aria-busy="true">
         <p class="loading">Abrindo nosso livro de memórias…</p>
       </div>
@@ -125,9 +127,11 @@
           </select></label>
       </div>
       <div class="gallery-actions">
+        <button id="gallery-authorize-delete" class="text-link delete-authorize" type="button">Autorizar exclusão temporária</button>
         <button id="gallery-add-photo" class="button primary" type="button"><span aria-hidden="true">📷</span> Adicionar foto ♡</button>
       </div>
       <p id="gallery-upload-feedback" class="gallery-feedback" role="status" aria-live="polite" hidden></p>
+      <p id="gallery-delete-feedback" class="gallery-feedback" role="status" aria-live="polite" hidden></p>
       <div id="gallery-grid" class="gallery-grid" aria-live="polite">
         <p class="loading">Preparando nosso álbum…</p>
       </div>
@@ -374,6 +378,25 @@
         <button id="manual-save" class="button primary" type="button">Guardar nosso encontro ♡</button>
       </div>
     </form>
+  </dialog>
+  <dialog id="admin-capability-dialog" class="delete-dialog" aria-labelledby="admin-capability-title">
+    <form id="admin-capability-form" class="delete-form" novalidate>
+      <div class="upload-heading"><div><p class="eyebrow">AÇÃO ADMINISTRATIVA TEMPORÁRIA</p><h2 id="admin-capability-title">Autorizar uma <em>exclusão.</em></h2></div><button id="admin-capability-close" class="icon-button" type="button" aria-label="Fechar">×</button></div>
+      <p class="delete-help">Gere uma capacidade de uso único no terminal local. Ela vale para um único registro e expira em 10 minutos. O frontend não guarda a capacidade após esta sessão.</p>
+      <label>Conteúdo<select id="admin-capability-item" required></select></label>
+      <label>Comando para gerar a capacidade<div class="copy-command-row"><input id="admin-capability-command" readonly /><button id="admin-capability-copy" class="button outline" type="button">Copiar</button></div></label>
+      <label>Capacidade temporária<input id="admin-capability-token" type="password" autocomplete="off" spellcheck="false" required pattern="[A-Za-z0-9_-]{43}" /></label>
+      <p id="admin-capability-status" class="delete-status" role="status" aria-live="polite"></p>
+      <div class="delete-form-actions"><button id="admin-capability-cancel" class="button outline" type="button">Cancelar</button><button id="admin-capability-submit" class="button primary" type="submit">Autorizar este item</button></div>
+    </form>
+  </dialog>
+  <dialog id="content-delete-dialog" class="delete-dialog" aria-labelledby="content-delete-title">
+    <div class="delete-form">
+      <div class="upload-heading"><div><p class="eyebrow">CONFIRMAÇÃO</p><h2 id="content-delete-title">Tem certeza que deseja apagar essa lembrança?</h2></div><button id="content-delete-close" class="icon-button" type="button" aria-label="Fechar confirmação">×</button></div>
+      <p id="content-delete-description" class="delete-help"></p>
+      <p id="content-delete-status" class="delete-status" role="status" aria-live="polite"></p>
+      <div class="delete-form-actions"><button id="content-delete-cancel" class="button outline" type="button">Cancelar</button><button id="content-delete-confirm" class="button primary" type="button">Sim, apagar</button></div>
+    </div>
   </dialog>
 </body>
 

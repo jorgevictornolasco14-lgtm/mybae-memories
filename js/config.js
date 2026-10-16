@@ -9,3 +9,5 @@ export const ENDPOINTS = Object.fromEntries(
 );
 ENDPOINTS.galeriaUpload = { path: "/api/galeria", method: "POST" };
 ENDPOINTS.memoriaCreate = { path: "/api/memorias", method: "POST" };
+ENDPOINTS.photoDelete = { path: "/api/galeria", method: "DELETE" };
+ENDPOINTS.memoryDelete = { path: "/api/memorias", method: "DELETE" };

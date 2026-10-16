@@ -8,7 +8,7 @@ import {
   safeImage,
 } from "../components/ui.js";
 
-export async function initGallery() {
+export async function initGallery(adminDeletion) {
   let photos = [];
   let orderedPhotos = [];
   let invalidPhotoCount = 0;
@@ -114,16 +114,35 @@ export async function initGallery() {
     const grid = $("#gallery-grid");
     grid.innerHTML = `${invalidPhotoCount ? `<p class="gallery-data-warning" role="status">${invalidPhotoCount} fotografia(s) vieram com endereço inválido e não foram exibidas.</p>` : ""}${orderedPhotos.length
       ? orderedPhotos.map((row, i) =>
-        `<button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(imageUrl(row))}" alt="${e(row.descricao || row.legenda || "Fotografia do álbum")}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button>`,
+        `<div class="photo-card-shell"><button class="photo-card" data-index="${i}" aria-label="Ampliar ${e(row.legenda || "fotografia")}"><img src="${e(imageUrl(row))}" alt="${e(row.descricao || row.legenda || "Fotografia do álbum")}" loading="lazy" width="400" height="300"><span>${e(row.legenda || "Um instante nosso")}</span><small>${e(formatDate(row.data_foto))}</small></button></div>`,
       ).join("")
       : emptyState("As nossas melhores páginas ainda vêm.", "Adicione uma fotografia para começar este álbum.")}`;
     grid.querySelectorAll("button[data-index]").forEach((button) => {
       const row = orderedPhotos[Number(button.dataset.index)];
       button.addEventListener("click", () => open(Number(button.dataset.index)));
       button.querySelector("img").addEventListener("error", (event) => refreshCardImage(row, event.currentTarget, button));
+      const trash = adminDeletion?.createTrashButton("foto", row, async (id) => {
+        photos = photos.filter((photo) => String(photo.id) !== String(id));
+        render();
+        const feedback = $("#gallery-delete-feedback");
+        try {
+          const latest = await api("galeria", { cache: "no-store" });
+          photos = latest.filter((photo) => imageUrl(photo) && String(photo.id) !== String(id));
+          invalidPhotoCount = latest.length - latest.filter((photo) => imageUrl(photo)).length;
+          render();
+          feedback.hidden = false;
+          feedback.textContent = "Galeria atualizada após a confirmação do servidor.";
+        } catch {
+          feedback.hidden = false;
+          feedback.textContent = "Exclusão confirmada. A galeria mostra os dados atualizados localmente; recarregue para consultar o servidor novamente.";
+        }
+      }, render);
+      if (trash) button.parentElement.append(trash);
     });
   }
 
+  $("#gallery-authorize-delete").addEventListener("click", () =>
+    adminDeletion?.openAuthorization("foto", photos, render));
   $("#gallery-sort").addEventListener("change", render);
   $("#lightbox-close").addEventListener("click", () => dialog.close());
   $("#lightbox-prev").addEventListener("click", () => open(index - 1));

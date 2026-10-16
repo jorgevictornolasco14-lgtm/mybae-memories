@@ -518,6 +518,11 @@
 }
 
 @media (max-width: 480px) {
+  .delete-authorize { font-size: 9px; }
+  .content-delete-button { width: 42px; height: 42px; }
+  .memory-card .content-delete-button { flex-basis: 42px; }
+  .delete-form-actions .button { flex: 1 1 120px; }
+  .copy-command-row { flex-direction: column; }
   .manual-steps-heading { align-items: flex-start; flex-direction: column; }
   .manual-steps-heading .button, .manual-form-actions .button { width: 100%; min-height: 46px; }
   .manual-step { padding: 12px; }
